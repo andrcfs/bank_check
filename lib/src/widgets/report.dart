@@ -1,10 +1,11 @@
-import 'dart:io';
 import 'dart:ui';
 
 import 'package:bank_check/src/variables.dart';
+import 'package:bank_check/src/widgets/pdf_view.dart';
 import 'package:flutter/material.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 
 class Report extends StatelessWidget {
   const Report({
@@ -16,14 +17,32 @@ class Report extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const List<String> tableHeaders = ['Data', 'Fornecedor', 'Valor'];
     return Scaffold(
       appBar: AppBar(
         title: const Text('Relatório'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.share),
-            onPressed: sharePdf,
-          ),
+              icon: const Icon(Icons.share),
+              onPressed: () async {
+                final String name = result['name']
+                    .toString()
+                    .replaceAll('.xlsx', '')
+                    .replaceAll(' ', '');
+                print(name);
+                await Printing.sharePdf(
+                    bytes: await generatePdf('Relatório', result),
+                    filename: 'relatorio-$name.pdf');
+                /* Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => PdfView(
+                      result: result,
+                    ),
+                  ),
+                ); */
+              }
+              //sharePdf,
+              ),
         ],
       ),
       body: SingleChildScrollView(
@@ -69,7 +88,7 @@ class Report extends StatelessWidget {
                                       1
                                   ? 'Os seguintes ${result['missingPayments']!.values.first.length} pagamentos não constam nas contas do sistema:'
                                   : 'O seguinte pagamento não consta nas contas do sistema:'
-                              : 'Nenhuma discrepância de data encontrada.',
+                              : 'Todos os pagamentos do extrato foram encontrados no sistema.',
                           style: const TextStyle(
                             fontWeight: FontWeight.w500,
                             fontSize: 16,
@@ -347,18 +366,71 @@ class Report extends StatelessWidget {
 
   void sharePdf() async {
     // Share the report
-    result;
     final pdf = pw.Document();
 
-    pdf.addPage(pw.Page(
+    pdf.addPage(
+      pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
-        build: (pw.Context context) {
-          return pw.Center(
-            child: pw.Text("Hello World"),
-          ); // Center
-        })); // Page
-    final String name = result['name'].toString().trim().replaceAll(' ', '');
-    final file = File("$name.pdf");
-    await file.writeAsBytes(await pdf.save());
+        build: (context) => [
+          contentTable(context, 'missingPayments'),
+          contentTable(context, 'priceDiff'),
+          contentTable(context, 'dateDiff')
+        ],
+      ),
+    );
+    // Page
+    //final String name = result['name'].toString().trim().replaceAll(' ', '');
+    //final file = File("$name.pdf");
+    //await file.writeAsBytes(await pdf.save());
+  }
+
+  pw.Widget contentTable(pw.Context context, String dataTitle) {
+    const List<String> tableHeaders = ['Data', 'Fornecedor', 'Valor'];
+
+    return pw.TableHelper.fromTextArray(
+      border: null,
+      cellAlignment: pw.Alignment.centerLeft,
+      headerDecoration: const pw.BoxDecoration(
+        borderRadius: pw.BorderRadius.all(pw.Radius.circular(2)),
+        color: PdfColors.blue,
+      ),
+      headerHeight: 25,
+      cellHeight: 40,
+      /* cellAlignments: {
+          0: pw.Alignment.centerLeft,
+          1: pw.Alignment.centerLeft,
+          2: pw.Alignment.centerRight,
+          3: pw.Alignment.center,
+          4: pw.Alignment.centerRight,
+        }, */
+      headerStyle: pw.TextStyle(
+        color: PdfColors.white,
+        fontSize: 10,
+        fontWeight: pw.FontWeight.bold,
+      ),
+      /* cellStyle: const pw.TextStyle(
+          color: PdfColors.black,
+          fontSize: 10,
+        ), */
+      /* rowDecoration: pw.BoxDecoration(
+          border: pw.Border(
+            bottom: pw.BorderSide(
+              color: accentColor,
+              width: .5,
+            ),
+          ),
+        ), */
+      headers: List<String>.generate(
+        tableHeaders.length,
+        (col) => tableHeaders[col],
+      ),
+      data: List<List<String>>.generate(
+        result.values.first.length,
+        (row) => List<String>.generate(
+          tableHeaders.length,
+          (col) => result[dataTitle][tableHeaders[col]][row],
+        ),
+      ),
+    );
   }
 }

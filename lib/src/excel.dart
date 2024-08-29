@@ -18,28 +18,28 @@ Map<String, dynamic> compare(context, File file, File file2) {
   isError = false;
   Map<String, List> transformedData = {
     'Data': [],
-    'Valor': [],
     'Fornecedor': [],
+    'Valor': [],
   };
   Map<String, List> transformedData2 = {
     'Data': [],
+    'Fornecedor': [],
     'Valor': [],
-    'Fornecedor': []
   };
   Map<String, List> priceDiff = {
     'Data': [],
-    'Valor': [],
     'Fornecedor': [],
+    'Valor': [],
   };
   Map<String, List> dateDiff = {
     'Data': [],
-    'Valor': [],
     'Fornecedor': [],
+    'Valor': [],
   };
   Map<String, List> missingPayments = {
     'Data': [],
-    'Valor': [],
     'Fornecedor': [],
+    'Valor': [],
   };
   int count = 0;
   indices = [];

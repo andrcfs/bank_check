@@ -82,7 +82,7 @@ class _MyHomeState extends State<MyHome> {
                             SizedBox(
                               width: MediaQuery.of(context).size.width / 3.4,
                               child: Text(
-                                basename(file.path),
+                                basename(file.path).replaceAll('.xlsx', ''),
                                 overflow: TextOverflow.ellipsis,
                                 textAlign: TextAlign.center,
                                 style: const TextStyle(
@@ -152,7 +152,7 @@ class _MyHomeState extends State<MyHome> {
                             SizedBox(
                               width: MediaQuery.of(context).size.width / 3.4,
                               child: Text(
-                                basename(file2.path),
+                                basename(file2.path).replaceAll('.xlsx', ''),
                                 overflow: TextOverflow.ellipsis,
                                 textAlign: TextAlign.center,
                                 style: const TextStyle(
