@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:bank_check/src/variables.dart';
 import 'package:excel/excel.dart';
 import 'package:flutter/material.dart';
+import 'package:path/path.dart';
 
 // Define the data types to search for
 List<String> columnNames = [
@@ -13,7 +14,7 @@ List<String> columnNames = [
 Map<String, int> columnIndices = {};
 List<int> indices = [];
 
-Map<String, Map<String, List>> compare(context, File file, File file2) {
+Map<String, dynamic> compare(context, File file, File file2) {
   isError = false;
   Map<String, List> transformedData = {
     'Data': [],
@@ -31,6 +32,11 @@ Map<String, Map<String, List>> compare(context, File file, File file2) {
     'Fornecedor': [],
   };
   Map<String, List> dateDiff = {
+    'Data': [],
+    'Valor': [],
+    'Fornecedor': [],
+  };
+  Map<String, List> missingPayments = {
     'Data': [],
     'Valor': [],
     'Fornecedor': [],
@@ -66,25 +72,39 @@ Map<String, Map<String, List>> compare(context, File file, File file2) {
     if (days.abs() <= 2) {
       count++;
     } else if (indexes.length < 2 && days.abs() % 7 != 0) {
-/*       print('indexes ${indexes.length}');
-      print(days.abs());
-      print(
-          'valor:${transformedData2['Valor']![i]}, data:${transformedData2['Data']![i]}'); */
       dateDiff['Data']!.add(transformedData2['Data']![i]);
       dateDiff['Valor']!.add(transformedData2['Valor']![i]);
       dateDiff['Fornecedor']!.add(transformedData2['Fornecedor']![i]);
       indices.add(i);
     }
   }
-  print(dateDiff);
+  for (int i = 0; i < transformedData.values.first.length; i++) {
+    if (!transformedData2['Valor']!.contains(transformedData['Valor']![i])) {
+      missingPayments['Data']!.add(transformedData['Data']![i]);
+      missingPayments['Valor']!.add(transformedData['Valor']![i]);
+      missingPayments['Fornecedor']!.add(transformedData['Fornecedor']![i]);
+    }
+  }
+  print(missingPayments);
+  //print(dateDiff);
   print(indices);
   print(count);
-  return {'priceDiff': priceDiff, 'dateDiff': dateDiff};
+  return {
+    'name': basename(file.path),
+    'name2': basename(file2.path),
+    'time': DateTime.now(),
+    'missingPayments': missingPayments,
+    'priceDiff': priceDiff,
+    'dateDiff': dateDiff,
+  };
 }
 
 void transform(Sheet table, Map<String, List> transformedData) {
   // Identify the columns that match the specified data types
-  for (int row = 4; row < table.maxRows - 2; row++) {
+  for (int row = 4; row < table.maxRows - 3; row++) {
+    if (table.rows[row][9]!.value.toString() != 'D') {
+      continue;
+    }
     var date = dateFormat.parse(table.rows[row][0]!.value.toString());
     var price = double.parse(table.rows[row][8]!.value
         .toString()

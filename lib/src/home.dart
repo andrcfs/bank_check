@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:bank_check/src/excel.dart';
 import 'package:bank_check/src/variables.dart';
+import 'package:bank_check/src/widgets/report.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
@@ -16,7 +17,7 @@ class MyHome extends StatefulWidget {
 class _MyHomeState extends State<MyHome> {
   File file = File('');
   File file2 = File('');
-  Map<String, Map<String, List>> result = {};
+  List<Map<String, dynamic>> result = [];
 
   @override
   Widget build(BuildContext context) {
@@ -25,15 +26,17 @@ class _MyHomeState extends State<MyHome> {
         title: const Text('Conciliação Bancária'),
       ),
       body: Center(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Row(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              Row(
                 children: [
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       iconColor: Colors.white,
+                      maximumSize:
+                          Size(MediaQuery.of(context).size.width / 2 - 20, 115),
                       minimumSize:
                           Size(MediaQuery.of(context).size.width / 2 - 20, 48),
                       foregroundColor: Colors.white,
@@ -94,6 +97,8 @@ class _MyHomeState extends State<MyHome> {
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       iconColor: Colors.white,
+                      maximumSize:
+                          Size(MediaQuery.of(context).size.width / 2 - 20, 115),
                       minimumSize:
                           Size(MediaQuery.of(context).size.width / 2 - 20, 48),
                       foregroundColor: Colors.white,
@@ -136,7 +141,10 @@ class _MyHomeState extends State<MyHome> {
                           const SizedBox(
                             height: 4.0,
                           ),
-                          const Text('Contas a Pagar'),
+                          const Text(
+                            'Inserir Despesas',
+                            //style: TextStyle(fontSize: 14),
+                          ),
                           SizedBox(
                             height: file2.path != '' ? 4.0 : 0.0,
                           ),
@@ -157,253 +165,213 @@ class _MyHomeState extends State<MyHome> {
                   ),
                 ],
               ),
-            ),
-            const SizedBox(height: 4),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                fixedSize: Size(MediaQuery.of(context).size.width * 0.6, 48),
-                foregroundColor: Colors.white,
-                side: const BorderSide(width: 1.5, color: Colors.blue),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30.0),
+              const SizedBox(height: 16.0),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  fixedSize: Size(MediaQuery.of(context).size.width * 0.6, 48),
+                  foregroundColor: Colors.white,
+                  side: const BorderSide(width: 1.5, color: Colors.blue),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30.0),
+                  ),
                 ),
-              ),
-              onPressed: () async {
-                if (file.path == '' || file2.path == '') {
-                  showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text(
-                        'Erro',
-                        style: TextStyle(color: Colors.red),
-                      ),
-                      content: const Text('Selecione os arquivos necessários'),
-                      actions: <Widget>[
-                        TextButton(
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
-                          child: const Text('OK'),
+                onPressed: () async {
+                  if (file.path == '' || file2.path == '') {
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text(
+                          'Erro',
+                          style: TextStyle(color: Colors.red),
                         ),
-                      ],
-                    ),
-                  );
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'Gerando relatório...',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                      backgroundColor: Colors.green,
-                      elevation: 1,
-                    ),
-                  );
-                  await Future.delayed(const Duration(milliseconds: 500));
-                  setState(() {
-                    result = compare(context, file, file2);
-                  });
-                }
-                //Navigator.pushNamed(context, '/sampleItemListView');
-              },
-              child: const Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text('Gerar relatório'),
-                    SizedBox(width: 4),
-                    Icon(
-                      Icons.edit,
-                      size: 18,
-                      color: Colors.white,
-                    )
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 8.0),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                children: [
-                  if (result.isNotEmpty && !isError)
-                    Container(
-                      height: MediaQuery.of(context).size.height - 310,
-                      width: MediaQuery.of(context).size.width - 16,
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 8.0, horizontal: 12.0),
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: Colors.blue,
-                          width: 1.5,
-                        ),
-                        borderRadius: BorderRadius.circular(10.0),
-                      ),
-                      child: SingleChildScrollView(
-                        scrollDirection: Axis.vertical,
-                        child: SizedBox(
-                          width: MediaQuery.of(context).size.width - 16,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                result['priceDiff']!.values.first.isNotEmpty
-                                    ? 'As seguintes ${result['priceDiff']!.values.first.length} contas não foram encontradas no extrato:'
-                                    : 'Todas as contas foram encontradas no extrato',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 16,
-                                ),
-                                textAlign: TextAlign.start,
-                              ),
-                              const SizedBox(
-                                height: 8.0,
-                              ),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children:
-                                    result['priceDiff']!.values.first.isNotEmpty
-                                        ? [
-                                            const Text('Data'),
-                                            const Text('Fornecedor'),
-                                            const Text('Valor(R\$)'),
-                                          ]
-                                        : [],
-                              ),
-                              const SizedBox(
-                                height: 4.0,
-                              ),
-                              SizedBox(
-                                height:
-                                    MediaQuery.of(context).size.height - 490,
-                                child: ListView.builder(
-                                  shrinkWrap: true,
-                                  itemCount:
-                                      result['priceDiff']!.values.first.length,
-                                  itemBuilder: (context, index) {
-                                    DateTime date =
-                                        result['priceDiff']!['Data']![index];
-                                    String formattedDate =
-                                        dateFormat.format(date);
-                                    return Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 16.0),
-                                      child: Row(
-                                        children: [
-                                          Text(formattedDate),
-                                          const SizedBox(
-                                            width: 12.0,
-                                          ),
-                                          SizedBox(
-                                            width: MediaQuery.of(context)
-                                                    .size
-                                                    .width *
-                                                0.5,
-                                            child: Text(
-                                              '${result['priceDiff']!['Fornecedor']![index]}',
-                                              style:
-                                                  const TextStyle(fontSize: 10),
-                                            ),
-                                          ),
-                                          const SizedBox(
-                                            width: 7.0,
-                                          ),
-                                          Text(
-                                              '${result['priceDiff']!['Valor']![index]}'),
-                                        ],
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                              const SizedBox(
-                                height: 20.0,
-                              ),
-                              Text(
-                                result['dateDiff']!.values.first.isNotEmpty
-                                    ? 'As seguintes ${result['dateDiff']!.values.first.length} contas possuem discrepância maior que 3 dias no seu pagamento:'
-                                    : 'Nenhuma discrepância de data encontrada.',
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: 16,
-                                ),
-                                textAlign: TextAlign.start,
-                              ),
-                              const SizedBox(
-                                height: 8.0,
-                              ),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children:
-                                    result['dateDiff']!.values.first.isNotEmpty
-                                        ? [
-                                            const Text('Data'),
-                                            const Text('Fornecedor'),
-                                            const Text('Valor(R\$)'),
-                                          ]
-                                        : [],
-                              ),
-                              const SizedBox(
-                                height: 4.0,
-                              ),
-                              SizedBox(
-                                height:
-                                    MediaQuery.of(context).size.height - 490,
-                                child: ListView.builder(
-                                  shrinkWrap: true,
-                                  itemCount:
-                                      result['dateDiff']!.values.first.length,
-                                  itemBuilder: (context, index) {
-                                    DateTime date =
-                                        result['dateDiff']!['Data']![index];
-                                    String formattedDate =
-                                        dateFormat.format(date);
-                                    return Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 16.0),
-                                      child: Row(
-                                        children: [
-                                          Text(formattedDate),
-                                          const SizedBox(
-                                            width: 12.0,
-                                          ),
-                                          SizedBox(
-                                            width: MediaQuery.of(context)
-                                                    .size
-                                                    .width *
-                                                0.5,
-                                            child: Text(
-                                              '${result['dateDiff']!['Fornecedor']![index]}',
-                                              style:
-                                                  const TextStyle(fontSize: 10),
-                                            ),
-                                          ),
-                                          const SizedBox(
-                                            width: 7.0,
-                                          ),
-                                          Text(
-                                              '${result['dateDiff']!['Valor']![index]}'),
-                                        ],
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                              const SizedBox(
-                                height: 8.0,
-                              ),
-                            ],
+                        content:
+                            const Text('Selecione os arquivos necessários'),
+                        actions: <Widget>[
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                            child: const Text('OK'),
                           ),
-                        ),
+                        ],
                       ),
-                    ),
-                ],
+                    );
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text(
+                          'Gerando relatório...',
+                          style: TextStyle(color: Colors.white),
+                        ),
+                        backgroundColor: Colors.green,
+                        elevation: 1,
+                      ),
+                    );
+                    await Future.delayed(const Duration(milliseconds: 500));
+                    setState(() {
+                      result.add(compare(context, file, file2));
+                    });
+                  }
+                  //Navigator.pushNamed(context, '/sampleItemListView');
+                },
+                child: const Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('Gerar relatório'),
+                      SizedBox(width: 4),
+                      Icon(
+                        Icons.edit,
+                        size: 18,
+                        color: Colors.white,
+                      )
+                    ],
+                  ),
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: 24.0),
+              if (result.isNotEmpty)
+                const Text(
+                  'Relatórios gerados',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w400,
+                  ),
+                  textAlign: TextAlign.start,
+                ),
+              const SizedBox(height: 16.0),
+              //if (result.isNotEmpty) Report(result: result[0]),
+              if (result.isNotEmpty)
+                SingleChildScrollView(
+                  child: SizedBox(
+                    height: MediaQuery.of(context).size.height * 0.505,
+                    child: ListView.builder(
+                      restorationId: 'missingPayments',
+                      shrinkWrap: true,
+                      itemCount: result.length,
+                      itemBuilder: (context, index) {
+                        return Column(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                    dateTimeFormat
+                                        .format(result[index]['time']),
+                                    style: const TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w400)),
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () async {
+                                Navigator.of(context).push(
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        Report(result: result[index]),
+                                  ),
+                                );
+                              },
+                              child: Container(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 8.0),
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                      color: Colors.blue, width: 1.5),
+                                  borderRadius: BorderRadius.circular(8.0),
+                                ),
+                                child: SizedBox(
+                                  //width: MediaQuery.of(context).size.width * 0.8,
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      SizedBox(
+                                        //width: MediaQuery.of(context).size.width * 0.8,
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.start,
+                                          children: [
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              result[index]['name'],
+                                              style:
+                                                  const TextStyle(fontSize: 11),
+                                            ),
+                                            const SizedBox(width: 2),
+                                            const Icon(
+                                              Icons.close,
+                                              size: 24,
+                                              color: Colors.blue,
+                                            ),
+                                            const SizedBox(width: 2),
+                                            Text(
+                                              result[index]['name2'],
+                                              style:
+                                                  const TextStyle(fontSize: 11),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      IconButton(
+                                        alignment: Alignment.center,
+                                        padding: const EdgeInsets.all(0),
+                                        onPressed: () {
+                                          showDialog(
+                                            context: context,
+                                            builder: (context) => AlertDialog(
+                                              title: const Text(
+                                                'Deletar',
+                                                style: TextStyle(
+                                                    color: Colors.red),
+                                              ),
+                                              content: const Text(
+                                                  'Deseja excluir este item?'),
+                                              actions: <Widget>[
+                                                TextButton(
+                                                  onPressed: () {
+                                                    Navigator.of(context).pop();
+                                                  },
+                                                  child: const Text('Cancelar'),
+                                                ),
+                                                TextButton(
+                                                  onPressed: () {
+                                                    setState(() =>
+                                                        result.removeAt(index));
+
+                                                    Navigator.of(context).pop();
+                                                  },
+                                                  child: const Text(
+                                                    'OK',
+                                                    style: TextStyle(
+                                                        color: Colors.red),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          );
+                                        },
+                                        icon: const Icon(
+                                          Icons.delete_forever_sharp,
+                                          size: 28,
+                                          color: Colors.red,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );

@@ -1,7 +1,5 @@
 import 'package:bank_check/src/home.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'sample_feature/sample_item_details_view.dart';
 import 'sample_feature/sample_item_list_view.dart';
@@ -37,7 +35,7 @@ class MyApp extends StatelessWidget {
           // Provide the generated AppLocalizations to the MaterialApp. This
           // allows descendant Widgets to display the correct translations
           // depending on the user's locale.
-          localizationsDelegates: const [
+          /* localizationsDelegates: const [
             AppLocalizations.delegate,
             GlobalMaterialLocalizations.delegate,
             GlobalWidgetsLocalizations.delegate,
@@ -48,7 +46,7 @@ class MyApp extends StatelessWidget {
             Locale('pt', ''),
             Locale('pt', 'BR'),
             Locale('es', ''),
-          ],
+          ], */
 
           // Use AppLocalizations to configure the correct application title
           // depending on the user's locale.
