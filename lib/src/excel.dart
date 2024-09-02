@@ -85,10 +85,10 @@ Map<String, dynamic> compare(context, File file, File file2) {
       missingPayments['Fornecedor']!.add(transformedData['Fornecedor']![i]);
     }
   }
-  print(missingPayments);
+  //print(missingPayments);
   //print(dateDiff);
-  print(indices);
-  print(count);
+  //print(indices);
+  //print(count);
   return {
     'name': basename(file.path),
     'name2': basename(file2.path),
@@ -105,15 +105,21 @@ void transform(Sheet table, Map<String, List> transformedData) {
     if (table.rows[row][9]!.value.toString() != 'D') {
       continue;
     }
-    var date = dateFormat.parse(table.rows[row][0]!.value.toString());
-    var price = double.parse(table.rows[row][8]!.value
+    print(table.rows[row][0]!.value.toString());
+    final date = dateFormat.parse(table.rows[row][0]!.value.toString());
+    final price = double.parse(table.rows[row][8]!.value
         .toString()
         .replaceAll('.', '')
         .replaceAll(',', '.'));
+    final supplier = table.rows[row][10]!.value.toString().replaceAll(' ', '');
 
+    if (supplier == '') {
+      transformedData['Fornecedor']!.add(table.rows[row][7]!.value.toString());
+    } else {
+      transformedData['Fornecedor']!.add(supplier);
+    }
     transformedData['Data']!.add(date);
     transformedData['Valor']!.add(price);
-    transformedData['Fornecedor']!.add(table.rows[row][10]!.value);
   }
 }
 
@@ -141,11 +147,13 @@ void transform2(context, Sheet table, Map<String, List> transformedData2) {
   }
   List<int> valuesList = columnIndices.values.toList();
   for (int row = 2; row < table.maxRows - 2; row++) {
-    DateCellValue date = table.rows[row][valuesList[0]]!.value as DateCellValue;
-    transformedData2['Data']!.add(date.asDateTimeLocal());
+    print(table.rows[row][valuesList[0]]!.value);
+    var date = DateTime.parse(table.rows[row][valuesList[0]]!.value.toString());
+    transformedData2['Data']!.add(date);
     var price = double.parse(table.rows[row][valuesList[1]]!.value.toString());
     transformedData2['Valor']!.add(price);
-    transformedData2['Fornecedor']!.add(table.rows[row][valuesList[2]]!.value);
+    transformedData2['Fornecedor']!
+        .add(table.rows[row][valuesList[2]]!.value.toString());
   }
 }
 

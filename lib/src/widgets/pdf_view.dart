@@ -57,6 +57,17 @@ Future<Uint8List> generatePdf(String title, Map<String, dynamic> result) async {
       ),
     );
     content.add(contentTable('missingPayments', result));
+    content.add(pw.SizedBox(height: 4.0));
+    content.add(
+      pw.Align(
+        alignment: pw.Alignment.centerRight,
+        child: pw.Paragraph(
+          text: result['missingPayments']!.values.first.length > 1
+              ? 'Total: R\$ ${result['missingPayments']!['Valor']!.fold(0, (a, b) => a + b).toStringAsFixed(2)}'
+              : '',
+        ),
+      ),
+    );
   } else {
     content.add(
       pw.Paragraph(
@@ -78,6 +89,17 @@ Future<Uint8List> generatePdf(String title, Map<String, dynamic> result) async {
       ),
     );
     content.add(contentTable('priceDiff', result));
+    content.add(pw.SizedBox(height: 4.0));
+    content.add(
+      pw.Align(
+        alignment: pw.Alignment.centerRight,
+        child: pw.Paragraph(
+          text: result['priceDiff']!.values.first.length > 1
+              ? 'Total: R\$ ${result['priceDiff']!['Valor']!.fold(0, (a, b) => a + b).toStringAsFixed(2)}'
+              : '',
+        ),
+      ),
+    );
   } else {
     content.add(
       pw.Paragraph(
@@ -97,6 +119,17 @@ Future<Uint8List> generatePdf(String title, Map<String, dynamic> result) async {
       ),
     );
     content.add(contentTable('dateDiff', result));
+    content.add(pw.SizedBox(height: 4.0));
+    content.add(
+      pw.Align(
+        alignment: pw.Alignment.centerRight,
+        child: pw.Paragraph(
+          text: result['dateDiff']!.values.first.length > 1
+              ? 'Total: R\$ ${result['dateDiff']!['Valor']!.fold(0, (a, b) => a + b).toStringAsFixed(2)}'
+              : '',
+        ),
+      ),
+    );
   } else {
     content.add(
       pw.Paragraph(
@@ -126,7 +159,7 @@ pw.Widget contentTable(String dataTitle, Map<String, dynamic> result) {
       color: PdfColors.blue,
     ),
     headerHeight: 25,
-    cellHeight: 40,
+    cellHeight: 20,
     cellAlignments: {
       0: pw.Alignment.centerLeft,
       1: pw.Alignment.centerLeft,
@@ -161,7 +194,9 @@ pw.Widget contentTable(String dataTitle, Map<String, dynamic> result) {
         tableHeaders.length,
         (col) => tableHeaders[col] == 'Data'
             ? dateFormatShort.format(result[dataTitle][tableHeaders[col]][row])
-            : result[dataTitle][tableHeaders[col]][row].toString(),
+            : tableHeaders[col] == 'Valor'
+                ? result[dataTitle][tableHeaders[col]][row].toStringAsFixed(2)
+                : result[dataTitle][tableHeaders[col]][row].toString(),
       ),
     ),
   );

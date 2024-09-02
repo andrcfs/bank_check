@@ -1,3 +1,4 @@
+import 'package:bank_check/src/backup.dart';
 import 'package:bank_check/src/home.dart';
 import 'package:flutter/material.dart';
 
@@ -7,7 +8,7 @@ import 'settings/settings_controller.dart';
 import 'settings/settings_view.dart';
 
 /// The Widget that configures your application.
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
   const MyApp({
     super.key,
     required this.settingsController,
@@ -16,16 +17,54 @@ class MyApp extends StatelessWidget {
   final SettingsController settingsController;
 
   @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  var _dataFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    print('penetrei');
+    _dataFuture = loadData();
+  }
+
+  @override
   Widget build(BuildContext context) {
     // Glue the SettingsController to the MaterialApp.
     //
     // The ListenableBuilder Widget listens to the SettingsController for changes.
     // Whenever the user updates their settings, the MaterialApp is rebuilt.
     return ListenableBuilder(
-      listenable: settingsController,
+      listenable: widget.settingsController,
       builder: (BuildContext context, Widget? child) {
         return MaterialApp(
-          home: const MyHome(),
+          home: Scaffold(
+            appBar: AppBar(
+              title: const Text('Conciliação Bancária'),
+            ),
+            body: FutureBuilder<List<Map<String, dynamic>>>(
+              future: _dataFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (snapshot.hasError) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Error: ${snapshot.error}'),
+                    ),
+                  );
+                  return const MyHome(result: []);
+                } else if (snapshot.hasData) {
+                  final data = snapshot.data!;
+                  return MyHome(result: data);
+                } else {
+                  return const MyHome(result: []);
+                }
+              },
+            ),
+          ),
           // Providing a restorationScopeId allows the Navigator built by the
           // MaterialApp to restore the navigation stack when a user leaves and
           // returns to the app after it has been killed while running in the
@@ -63,7 +102,7 @@ class MyApp extends StatelessWidget {
               colorScheme: ColorScheme.fromSwatch(
                   primarySwatch: Colors.blue, brightness: Brightness.dark),
               useMaterial3: true),
-          themeMode: settingsController.themeMode,
+          themeMode: widget.settingsController.themeMode,
 
           // Define a function to handle named routes in order to support
           // Flutter web url navigation and deep linking.
@@ -73,7 +112,7 @@ class MyApp extends StatelessWidget {
               builder: (BuildContext context) {
                 switch (routeSettings.name) {
                   case SettingsView.routeName:
-                    return SettingsView(controller: settingsController);
+                    return SettingsView(controller: widget.settingsController);
                   case SampleItemDetailsView.routeName:
                     return const SampleItemDetailsView();
                   case SampleItemListView.routeName:

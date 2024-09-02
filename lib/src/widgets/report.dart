@@ -3,9 +3,6 @@ import 'dart:ui';
 import 'package:bank_check/src/variables.dart';
 import 'package:bank_check/src/widgets/pdf_view.dart';
 import 'package:flutter/material.dart';
-import 'package:pdf/pdf.dart';
-import 'package:pdf/widgets.dart' as pw;
-import 'package:printing/printing.dart';
 
 class Report extends StatelessWidget {
   const Report({
@@ -17,7 +14,6 @@ class Report extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const List<String> tableHeaders = ['Data', 'Fornecedor', 'Valor'];
     return Scaffold(
       appBar: AppBar(
         title: const Text('Relatório'),
@@ -30,19 +26,17 @@ class Report extends StatelessWidget {
                     .replaceAll('.xlsx', '')
                     .replaceAll(' ', '');
                 print(name);
-                await Printing.sharePdf(
+                /* await Printing.sharePdf(
                     bytes: await generatePdf('Relatório', result),
-                    filename: 'relatorio-$name.pdf');
-                /* Navigator.of(context).push(
+                    filename: 'relatorio-$name.pdf'); */
+                Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (context) => PdfView(
                       result: result,
                     ),
                   ),
-                ); */
-              }
-              //sharePdf,
-              ),
+                );
+              }),
         ],
       ),
       body: SingleChildScrollView(
@@ -64,7 +58,7 @@ class Report extends StatelessWidget {
                 ),
               ),
               Container(
-                height: MediaQuery.of(context).size.height - 410,
+                height: MediaQuery.of(context).size.height - 380,
                 width: MediaQuery.of(context).size.width - 16,
                 padding:
                     const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
@@ -113,7 +107,7 @@ class Report extends StatelessWidget {
                           height: 4.0,
                         ),
                         SizedBox(
-                          height: MediaQuery.of(context).size.height - 490,
+                          height: MediaQuery.of(context).size.height - 518,
                           width: MediaQuery.of(context).size.width,
                           child: ListView.builder(
                             restorationId: 'missingPayments',
@@ -127,7 +121,7 @@ class Report extends StatelessWidget {
                                   dateFormatShort.format(date);
                               return Padding(
                                 padding:
-                                    const EdgeInsets.symmetric(vertical: 16.0),
+                                    const EdgeInsets.symmetric(vertical: 12.0),
                                 child: Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
@@ -146,11 +140,29 @@ class Report extends StatelessWidget {
                                       ),
                                     ),
                                     Text(
-                                        '${result['missingPayments']!['Valor']![index]}'),
+                                        '${result['missingPayments']!['Valor']![index].toStringAsFixed(2)}'),
                                   ],
                                 ),
                               );
                             },
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 4.0,
+                        ),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text(
+                              result['missingPayments']!.values.first.length > 1
+                                  ? 'Total: R\$ ${result['missingPayments']!['Valor']!.fold(0, (a, b) => a + b).toStringAsFixed(2)}'
+                                  : '',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w400,
+                                fontSize: 16,
+                              ),
+                            ),
                           ),
                         ),
                         const SizedBox(
@@ -240,7 +252,7 @@ class Report extends StatelessWidget {
                                   dateFormatShort.format(date);
                               return Padding(
                                 padding:
-                                    const EdgeInsets.symmetric(vertical: 16.0),
+                                    const EdgeInsets.symmetric(vertical: 12.0),
                                 child: Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
@@ -269,6 +281,24 @@ class Report extends StatelessWidget {
                                 ),
                               );
                             },
+                          ),
+                        ),
+                        const SizedBox(
+                          height: 4.0,
+                        ),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text(
+                              result['priceDiff']!.values.first.isNotEmpty
+                                  ? 'Total: R\$ ${result['priceDiff']!['Valor']!.fold(0, (a, b) => a + b).toStringAsFixed(2)}'
+                                  : '',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w400,
+                                fontSize: 16,
+                              ),
+                            ),
                           ),
                         ),
                         const SizedBox(
@@ -318,7 +348,7 @@ class Report extends StatelessWidget {
                                   dateFormatShort.format(date);
                               return Padding(
                                 padding:
-                                    const EdgeInsets.symmetric(vertical: 16.0),
+                                    const EdgeInsets.symmetric(vertical: 12.0),
                                 child: Row(
                                   mainAxisAlignment:
                                       MainAxisAlignment.spaceBetween,
@@ -350,6 +380,24 @@ class Report extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(
+                          height: 4.0,
+                        ),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text(
+                              result['dateDiff']!.values.first.length > 1
+                                  ? 'Total: R\$ ${result['dateDiff']!['Valor']!.fold(0, (a, b) => a + b).toStringAsFixed(2)}'
+                                  : '',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w400,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(
                           height: 8.0,
                         ),
                       ],
@@ -359,76 +407,6 @@ class Report extends StatelessWidget {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  void sharePdf() async {
-    // Share the report
-    final pdf = pw.Document();
-
-    pdf.addPage(
-      pw.MultiPage(
-        pageFormat: PdfPageFormat.a4,
-        build: (context) => [
-          contentTable(context, 'missingPayments'),
-          contentTable(context, 'priceDiff'),
-          contentTable(context, 'dateDiff')
-        ],
-      ),
-    );
-    // Page
-    //final String name = result['name'].toString().trim().replaceAll(' ', '');
-    //final file = File("$name.pdf");
-    //await file.writeAsBytes(await pdf.save());
-  }
-
-  pw.Widget contentTable(pw.Context context, String dataTitle) {
-    const List<String> tableHeaders = ['Data', 'Fornecedor', 'Valor'];
-
-    return pw.TableHelper.fromTextArray(
-      border: null,
-      cellAlignment: pw.Alignment.centerLeft,
-      headerDecoration: const pw.BoxDecoration(
-        borderRadius: pw.BorderRadius.all(pw.Radius.circular(2)),
-        color: PdfColors.blue,
-      ),
-      headerHeight: 25,
-      cellHeight: 40,
-      /* cellAlignments: {
-          0: pw.Alignment.centerLeft,
-          1: pw.Alignment.centerLeft,
-          2: pw.Alignment.centerRight,
-          3: pw.Alignment.center,
-          4: pw.Alignment.centerRight,
-        }, */
-      headerStyle: pw.TextStyle(
-        color: PdfColors.white,
-        fontSize: 10,
-        fontWeight: pw.FontWeight.bold,
-      ),
-      /* cellStyle: const pw.TextStyle(
-          color: PdfColors.black,
-          fontSize: 10,
-        ), */
-      /* rowDecoration: pw.BoxDecoration(
-          border: pw.Border(
-            bottom: pw.BorderSide(
-              color: accentColor,
-              width: .5,
-            ),
-          ),
-        ), */
-      headers: List<String>.generate(
-        tableHeaders.length,
-        (col) => tableHeaders[col],
-      ),
-      data: List<List<String>>.generate(
-        result.values.first.length,
-        (row) => List<String>.generate(
-          tableHeaders.length,
-          (col) => result[dataTitle][tableHeaders[col]][row],
         ),
       ),
     );
