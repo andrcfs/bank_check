@@ -159,7 +159,8 @@ pw.Widget contentTable(String dataTitle, Map<String, dynamic> result) {
       color: PdfColors.blue,
     ),
     headerHeight: 25,
-    cellHeight: 20,
+    cellHeight: 10,
+    cellPadding: const pw.EdgeInsets.symmetric(vertical: 1),
     cellAlignments: {
       0: pw.Alignment.centerLeft,
       1: pw.Alignment.centerLeft,

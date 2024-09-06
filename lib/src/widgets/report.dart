@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:bank_check/src/variables.dart';
 import 'package:bank_check/src/widgets/pdf_view.dart';
 import 'package:flutter/material.dart';
+import 'package:printing/printing.dart';
 
 class Report extends StatelessWidget {
   const Report({
@@ -25,23 +26,24 @@ class Report extends StatelessWidget {
                     .toString()
                     .replaceAll('.xlsx', '')
                     .replaceAll(' ', '');
-                print(name);
-                /* await Printing.sharePdf(
+
+                await Printing.sharePdf(
                     bytes: await generatePdf('Relatório', result),
-                    filename: 'relatorio-$name.pdf'); */
-                Navigator.of(context).push(
+                    filename: 'relatorio-$name.pdf');
+                /* Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (context) => PdfView(
                       result: result,
                     ),
                   ),
-                );
+                ); */
               }),
         ],
       ),
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.all(8.0),
+          padding: EdgeInsets.all(
+              MediaQuery.of(context).size.height > 570 ? 8.0 : 4),
           child: Column(
             children: [
               const Align(
@@ -58,10 +60,12 @@ class Report extends StatelessWidget {
                 ),
               ),
               Container(
-                height: MediaQuery.of(context).size.height - 380,
+                height: MediaQuery.of(context).size.height * 0.6,
                 width: MediaQuery.of(context).size.width - 16,
-                padding:
-                    const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
+                padding: EdgeInsets.symmetric(
+                    vertical:
+                        MediaQuery.of(context).size.height > 570 ? 8.0 : 4,
+                    horizontal: 12.0),
                 decoration: BoxDecoration(
                   border: Border.all(
                     color: Colors.blue,
@@ -89,8 +93,10 @@ class Report extends StatelessWidget {
                           ),
                           textAlign: TextAlign.start,
                         ),
-                        const SizedBox(
-                          height: 8.0,
+                        SizedBox(
+                          height: MediaQuery.of(context).size.height > 570
+                              ? 8.0
+                              : 4,
                         ),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -103,11 +109,13 @@ class Report extends StatelessWidget {
                                     ]
                                   : [],
                         ),
-                        const SizedBox(
-                          height: 4.0,
+                        SizedBox(
+                          height: MediaQuery.of(context).size.height > 570
+                              ? 4.0
+                              : 2,
                         ),
                         SizedBox(
-                          height: MediaQuery.of(context).size.height - 518,
+                          height: MediaQuery.of(context).size.height * 0.39,
                           width: MediaQuery.of(context).size.width,
                           child: ListView.builder(
                             restorationId: 'missingPayments',
@@ -147,8 +155,10 @@ class Report extends StatelessWidget {
                             },
                           ),
                         ),
-                        const SizedBox(
-                          height: 4.0,
+                        SizedBox(
+                          height: MediaQuery.of(context).size.height > 570
+                              ? 4.0
+                              : 2,
                         ),
                         Align(
                           alignment: Alignment.centerRight,
@@ -165,8 +175,10 @@ class Report extends StatelessWidget {
                             ),
                           ),
                         ),
-                        const SizedBox(
-                          height: 8.0,
+                        SizedBox(
+                          height: MediaQuery.of(context).size.height > 570
+                              ? 8.0
+                              : 4,
                         ),
                       ],
                     ),
@@ -187,7 +199,7 @@ class Report extends StatelessWidget {
                 ),
               ),
               Container(
-                height: MediaQuery.of(context).size.height / 2,
+                height: MediaQuery.of(context).size.height * 0.6,
                 width: MediaQuery.of(context).size.width - 16,
                 padding:
                     const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
@@ -217,8 +229,10 @@ class Report extends StatelessWidget {
                           ),
                           textAlign: TextAlign.start,
                         ),
-                        const SizedBox(
-                          height: 8.0,
+                        SizedBox(
+                          height: MediaQuery.of(context).size.height > 570
+                              ? 8.0
+                              : 4,
                         ),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -230,8 +244,10 @@ class Report extends StatelessWidget {
                                 ]
                               : [],
                         ),
-                        const SizedBox(
-                          height: 4.0,
+                        SizedBox(
+                          height: MediaQuery.of(context).size.height > 570
+                              ? 4.0
+                              : 2,
                         ),
                         SizedBox(
                           height: clampDouble(
@@ -239,7 +255,7 @@ class Report extends StatelessWidget {
                                       .toDouble() *
                                   40,
                               50.0,
-                              MediaQuery.of(context).size.height - 490),
+                              MediaQuery.of(context).size.height * 0.3),
                           width: MediaQuery.of(context).size.width,
                           child: ListView.builder(
                             restorationId: 'priceDiff',
@@ -283,8 +299,10 @@ class Report extends StatelessWidget {
                             },
                           ),
                         ),
-                        const SizedBox(
-                          height: 4.0,
+                        SizedBox(
+                          height: MediaQuery.of(context).size.height > 570
+                              ? 4.0
+                              : 2,
                         ),
                         Align(
                           alignment: Alignment.centerRight,
@@ -301,8 +319,10 @@ class Report extends StatelessWidget {
                             ),
                           ),
                         ),
-                        const SizedBox(
-                          height: 20.0,
+                        SizedBox(
+                          height: MediaQuery.of(context).size.height > 570
+                              ? 20.0
+                              : 10,
                         ),
                         Text(
                           result['dateDiff']!.values.first.isNotEmpty
@@ -316,8 +336,10 @@ class Report extends StatelessWidget {
                           ),
                           textAlign: TextAlign.start,
                         ),
-                        const SizedBox(
-                          height: 8.0,
+                        SizedBox(
+                          height: MediaQuery.of(context).size.height > 570
+                              ? 8.0
+                              : 4.0,
                         ),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -329,8 +351,10 @@ class Report extends StatelessWidget {
                                 ]
                               : [],
                         ),
-                        const SizedBox(
-                          height: 4.0,
+                        SizedBox(
+                          height: MediaQuery.of(context).size.height > 570
+                              ? 4.0
+                              : 2,
                         ),
                         SizedBox(
                           height: result['dateDiff']!.values.first.isNotEmpty
@@ -379,8 +403,10 @@ class Report extends StatelessWidget {
                             },
                           ),
                         ),
-                        const SizedBox(
-                          height: 4.0,
+                        SizedBox(
+                          height: MediaQuery.of(context).size.height > 570
+                              ? 4.0
+                              : 2,
                         ),
                         Align(
                           alignment: Alignment.centerRight,

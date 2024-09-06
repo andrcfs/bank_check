@@ -22,20 +22,26 @@ class _MyHomeState extends State<MyHome> {
 
   @override
   Widget build(BuildContext context) {
+    print("rabanada:");
+    print(MediaQuery.of(context).size.height);
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding:
+            EdgeInsets.all(MediaQuery.of(context).size.height > 570 ? 16.0 : 8),
         child: Column(
           children: [
             Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     iconColor: Colors.white,
-                    maximumSize:
-                        Size(MediaQuery.of(context).size.width / 2 - 20, 115),
-                    minimumSize:
-                        Size(MediaQuery.of(context).size.width / 2 - 20, 48),
+                    maximumSize: Size(
+                        MediaQuery.of(context).size.width / 2 - 20,
+                        MediaQuery.of(context).size.height * 0.18),
+                    minimumSize: Size(
+                        MediaQuery.of(context).size.width / 2 - 20,
+                        MediaQuery.of(context).size.height * 0.075),
                     foregroundColor: Colors.white,
                     side: const BorderSide(width: 1.5, color: Colors.blue),
                     shape: RoundedRectangleBorder(
@@ -71,7 +77,11 @@ class _MyHomeState extends State<MyHome> {
                         const SizedBox(
                           height: 4.0,
                         ),
-                        const Text('Inserir Extrato'),
+                        Text(
+                          MediaQuery.of(context).size.width > 360
+                              ? 'Inserir Extrato'
+                              : 'Extrato',
+                        ),
                         SizedBox(
                           height: file.path != '' ? 4.0 : 0.0,
                         ),
@@ -94,10 +104,12 @@ class _MyHomeState extends State<MyHome> {
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     iconColor: Colors.white,
-                    maximumSize:
-                        Size(MediaQuery.of(context).size.width / 2 - 20, 115),
-                    minimumSize:
-                        Size(MediaQuery.of(context).size.width / 2 - 20, 48),
+                    maximumSize: Size(
+                        MediaQuery.of(context).size.width / 2 - 20,
+                        MediaQuery.of(context).size.height * 0.18),
+                    minimumSize: Size(
+                        MediaQuery.of(context).size.width / 2 - 20,
+                        MediaQuery.of(context).size.height * 0.075),
                     foregroundColor: Colors.white,
                     side: const BorderSide(width: 1.5, color: Colors.blue),
                     shape: RoundedRectangleBorder(
@@ -138,8 +150,10 @@ class _MyHomeState extends State<MyHome> {
                         const SizedBox(
                           height: 4.0,
                         ),
-                        const Text(
-                          'Inserir Despesas',
+                        Text(
+                          MediaQuery.of(context).size.width > 360
+                              ? 'Inserir Despesas'
+                              : 'Despesas',
                           //style: TextStyle(fontSize: 14),
                         ),
                         SizedBox(
@@ -162,10 +176,12 @@ class _MyHomeState extends State<MyHome> {
                 ),
               ],
             ),
-            const SizedBox(height: 16.0),
+            SizedBox(
+                height: MediaQuery.of(context).size.height > 570 ? 16.0 : 8),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                fixedSize: Size(MediaQuery.of(context).size.width * 0.6, 48),
+                fixedSize: Size(MediaQuery.of(context).size.width * 0.6,
+                    MediaQuery.of(context).size.height * 0.07),
                 foregroundColor: Colors.white,
                 side: const BorderSide(width: 1.5, color: Colors.blue),
                 shape: RoundedRectangleBorder(
@@ -227,7 +243,8 @@ class _MyHomeState extends State<MyHome> {
                 ),
               ),
             ),
-            const SizedBox(height: 24.0),
+            SizedBox(
+                height: MediaQuery.of(context).size.height > 570 ? 24.0 : 8),
             if (widget.result.isNotEmpty)
               const Text(
                 'Relatórios gerados',
@@ -237,12 +254,13 @@ class _MyHomeState extends State<MyHome> {
                 ),
                 textAlign: TextAlign.start,
               ),
-            const SizedBox(height: 16.0),
+            SizedBox(
+                height: MediaQuery.of(context).size.height > 570 ? 16.0 : 4),
             //if (widget.result.isNotEmpty) Report(widget.result: widget.result[0]),
             if (widget.result.isNotEmpty)
               SingleChildScrollView(
                 child: SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.505,
+                  height: MediaQuery.of(context).size.height * 0.49,
                   child: ListView.builder(
                     restorationId: 'missingPayments',
                     shrinkWrap: true,
@@ -286,16 +304,24 @@ class _MyHomeState extends State<MyHome> {
                                       MainAxisAlignment.spaceBetween,
                                   children: [
                                     SizedBox(
-                                      //width: MediaQuery.of(context).size.width * 0.8,
+                                      width: MediaQuery.of(context).size.width *
+                                          0.7,
                                       child: Row(
                                         mainAxisAlignment:
                                             MainAxisAlignment.start,
                                         children: [
                                           const SizedBox(width: 4),
-                                          Text(
-                                            widget.result[index]['name'],
-                                            style:
-                                                const TextStyle(fontSize: 11),
+                                          SizedBox(
+                                            width: MediaQuery.of(context)
+                                                    .size
+                                                    .width *
+                                                0.25,
+                                            child: Text(
+                                              widget.result[index]['name'],
+                                              style:
+                                                  const TextStyle(fontSize: 11),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
                                           ),
                                           const SizedBox(width: 2),
                                           const Icon(
@@ -304,10 +330,17 @@ class _MyHomeState extends State<MyHome> {
                                             color: Colors.blue,
                                           ),
                                           const SizedBox(width: 2),
-                                          Text(
-                                            widget.result[index]['name2'],
-                                            style:
-                                                const TextStyle(fontSize: 11),
+                                          SizedBox(
+                                            width: MediaQuery.of(context)
+                                                    .size
+                                                    .width *
+                                                0.36,
+                                            child: Text(
+                                              widget.result[index]['name2'],
+                                              style:
+                                                  const TextStyle(fontSize: 11),
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
                                           ),
                                         ],
                                       ),
