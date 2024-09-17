@@ -84,7 +84,7 @@ Future<Uint8List> generatePdf(String title, Map<String, dynamic> result) async {
     content.add(
       pw.Paragraph(
         text: result['priceDiff']!.values.first.length > 1
-            ? 'As seguintes despesas ${result['priceDiff']!.values.first.length} não foram encontradas no extrato:'
+            ? 'As seguintes ${result['priceDiff']!.values.first.length} despesas não foram encontradas no extrato:'
             : 'A seguinte despesa não foi encontrada no extrato:',
       ),
     );
@@ -134,6 +134,38 @@ Future<Uint8List> generatePdf(String title, Map<String, dynamic> result) async {
     content.add(
       pw.Paragraph(
         text: 'Todas as contas possuem data de pagamento compatível.',
+      ),
+    );
+  }
+  content.add(
+    pw.SizedBox(height: 20),
+  );
+  content.add(pw.Header(level: 2, text: 'Pagamentos encontrados no sistema'));
+  if (result['paymentsFound'] != null &&
+      result['paymentsFound']!.values.first.isNotEmpty) {
+    content.add(
+      pw.Paragraph(
+        text: result['paymentsFound']!.values.first.length > 1
+            ? 'Os seguintes ${result['paymentsFound']!.values.first.length} pagamentos foram encontrados no sistema:'
+            : 'O seguinte pagamento foi encontrado no sistema:',
+      ),
+    );
+    content.add(contentTable('paymentsFound', result));
+    content.add(pw.SizedBox(height: 4.0));
+    content.add(
+      pw.Align(
+        alignment: pw.Alignment.centerRight,
+        child: pw.Paragraph(
+          text: result['paymentsFound']!.values.first.length > 1
+              ? 'Total: R\$ ${result['paymentsFound']!['Valor']!.fold(0, (a, b) => a + b).toStringAsFixed(2)}'
+              : '',
+        ),
+      ),
+    );
+  } else {
+    content.add(
+      pw.Paragraph(
+        text: 'Nenhum pagamento foi encontrado no sistema.',
       ),
     );
   }

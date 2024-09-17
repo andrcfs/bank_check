@@ -9,7 +9,8 @@ import 'package:path/path.dart';
 List<String> columnNames = [
   'Data Vencimento',
   'Valor p/ Pagamento',
-  'Fornecedor Razão Social'
+  'Fornecedor Nome Fantasia',
+  'Fornecedor Razão Social',
 ];
 Map<String, int> columnIndices = {};
 List<int> indices = [];
@@ -41,7 +42,11 @@ Map<String, dynamic> compare(context, File file, File file2) {
     'Fornecedor': [],
     'Valor': [],
   };
-  int count = 0;
+  Map<String, List> paymentsFound = {
+    'Data': [],
+    'Fornecedor': [],
+    'Valor': [],
+  };
   indices = [];
   Sheet table = read(file);
   Sheet table2 = read(file2);
@@ -70,7 +75,10 @@ Map<String, dynamic> compare(context, File file, File file2) {
     final int days = date.difference(transformedData2['Data']![i]).inDays;
 
     if (days.abs() <= 2) {
-      count++;
+      paymentsFound['Data']!.add(transformedData2['Data']![i]);
+      paymentsFound['Valor']!.add(transformedData2['Valor']![i]);
+      paymentsFound['Fornecedor']!.add(transformedData2['Fornecedor']![i]);
+      continue;
     } else if (indexes.length < 2 && days.abs() % 7 != 0) {
       dateDiff['Data']!.add(transformedData2['Data']![i]);
       dateDiff['Valor']!.add(transformedData2['Valor']![i]);
@@ -96,6 +104,7 @@ Map<String, dynamic> compare(context, File file, File file2) {
     'missingPayments': missingPayments,
     'priceDiff': priceDiff,
     'dateDiff': dateDiff,
+    'paymentsFound': paymentsFound,
   };
 }
 
@@ -105,7 +114,7 @@ void transform(Sheet table, Map<String, List> transformedData) {
     if (table.rows[row][9]!.value.toString() != 'D') {
       continue;
     }
-    print(table.rows[row][0]!.value.toString());
+
     final date = dateFormat.parse(table.rows[row][0]!.value.toString());
     final price = double.parse(table.rows[row][8]!.value
         .toString()
@@ -147,13 +156,19 @@ void transform2(context, Sheet table, Map<String, List> transformedData2) {
   }
   List<int> valuesList = columnIndices.values.toList();
   for (int row = 2; row < table.maxRows - 2; row++) {
-    print(table.rows[row][valuesList[0]]!.value);
     var date = DateTime.parse(table.rows[row][valuesList[0]]!.value.toString());
     transformedData2['Data']!.add(date);
     var price = double.parse(table.rows[row][valuesList[1]]!.value.toString());
     transformedData2['Valor']!.add(price);
-    transformedData2['Fornecedor']!
-        .add(table.rows[row][valuesList[2]]!.value.toString());
+    final supplier =
+        table.rows[row][valuesList[3]]!.value.toString().replaceAll(' ', '');
+    if (supplier == '' && valuesList.length > 3) {
+      transformedData2['Fornecedor']!
+          .add(table.rows[row][valuesList[2]]!.value.toString());
+    } else {
+      transformedData2['Fornecedor']!
+          .add(table.rows[row][valuesList[3]]!.value.toString());
+    }
   }
 }
 
