@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
-import 'package:bank_check/src/variables.dart';
+import 'package:bank_check/src/utils/classes.dart';
+import 'package:bank_check/src/utils/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -8,11 +9,11 @@ import 'package:printing/printing.dart';
 
 class PdfView extends StatelessWidget {
   const PdfView({super.key, required this.result});
-  final Map<String, dynamic> result;
+  final Result result;
 
   @override
   Widget build(BuildContext context) {
-    print(result['missingPayments'].values.first.length);
+    print(result.missingPayments.length);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Flutter PDF Visualization'),
@@ -31,7 +32,7 @@ class PdfView extends StatelessWidget {
     return pw.TableHelper.fromTextArray(
       context: context,
       data: List<List<String>>.generate(
-        result[dataTitle].values.first.length,
+        result.dateDiff.length,
         (row) => List<String>.generate(
           tableHeaders.length,
           (col) => '$col x $row',
@@ -41,29 +42,29 @@ class PdfView extends StatelessWidget {
   }
 }
 
-Future<Uint8List> generatePdf(String title, Map<String, dynamic> result) async {
+Future<Uint8List> generatePdf(String title, Result result) async {
   final pdf = pw.Document(version: PdfVersion.pdf_1_5, compress: true);
   List<pw.Widget> content = [
     pw.Header(level: 0, text: 'Relatório de Conciliação Bancária'),
     pw.Header(level: 2, text: 'Extrato X Despesas'),
   ];
 
-  if (result['missingPayments']!.values.first.isNotEmpty) {
+  if (result.missingPayments.isNotEmpty) {
     content.add(
       pw.Paragraph(
-        text: result['missingPayments']!.values.first.length > 1
-            ? 'Os seguintes ${result['missingPayments']!.values.first.length} pagamentos não constam nas contas do sistema:'
+        text: result.missingPayments.length > 1
+            ? 'Os seguintes ${result.missingPayments.length} pagamentos não constam nas contas do sistema:'
             : 'O seguinte pagamento não consta nas contas do sistema:',
       ),
     );
-    content.add(contentTable('missingPayments', result));
+    content.add(contentTable('missingPayments', result.missingPayments));
     content.add(pw.SizedBox(height: 4.0));
     content.add(
       pw.Align(
         alignment: pw.Alignment.centerRight,
         child: pw.Paragraph(
-          text: result['missingPayments']!.values.first.length > 1
-              ? 'Total: R\$ ${result['missingPayments']!['Valor']!.fold(0, (a, b) => a + b).toStringAsFixed(2)}'
+          text: result.missingPayments.length > 1
+              ? 'Total: R\$ ${result.missingPayments.fold(0.0, (a, b) => a + b.price).toStringAsFixed(2)}'
               : '',
         ),
       ),
@@ -80,22 +81,22 @@ Future<Uint8List> generatePdf(String title, Map<String, dynamic> result) async {
   );
   content.add(pw.Header(level: 2, text: 'Despesas X Extrato'));
 
-  if (result['priceDiff']!.values.first.isNotEmpty) {
+  if (result.priceDiff.isNotEmpty) {
     content.add(
       pw.Paragraph(
-        text: result['priceDiff']!.values.first.length > 1
-            ? 'As seguintes despesas ${result['priceDiff']!.values.first.length} não foram encontradas no extrato:'
+        text: result.priceDiff.length > 1
+            ? 'As seguintes ${result.priceDiff.length} despesas não foram encontradas no extrato:'
             : 'A seguinte despesa não foi encontrada no extrato:',
       ),
     );
-    content.add(contentTable('priceDiff', result));
+    content.add(contentTable('priceDiff', result.priceDiff));
     content.add(pw.SizedBox(height: 4.0));
     content.add(
       pw.Align(
         alignment: pw.Alignment.centerRight,
         child: pw.Paragraph(
-          text: result['priceDiff']!.values.first.length > 1
-              ? 'Total: R\$ ${result['priceDiff']!['Valor']!.fold(0, (a, b) => a + b).toStringAsFixed(2)}'
+          text: result.priceDiff.length > 1
+              ? 'Total: R\$ ${result.priceDiff.fold(0.0, (a, b) => a + b.price).toStringAsFixed(2)}'
               : '',
         ),
       ),
@@ -110,22 +111,22 @@ Future<Uint8List> generatePdf(String title, Map<String, dynamic> result) async {
   content.add(
     pw.SizedBox(height: 20),
   );
-  if (result['dateDiff']!.values.first.isNotEmpty) {
+  if (result.dateDiff.isNotEmpty) {
     content.add(
       pw.Paragraph(
-        text: result['dateDiff']!.values.first.length > 1
-            ? 'As seguintes ${result['dateDiff']!.values.first.length} contas possuem discrepância maior que 3 dias no seu pagamento:'
+        text: result.dateDiff.length > 1
+            ? 'As seguintes ${result.dateDiff.length} contas possuem discrepância maior que 3 dias no seu pagamento:'
             : 'A seguinte conta possui discrepância maior que 3 dias no seu pagamento:',
       ),
     );
-    content.add(contentTable('dateDiff', result));
+    content.add(contentTable('dateDiff', result.dateDiff));
     content.add(pw.SizedBox(height: 4.0));
     content.add(
       pw.Align(
         alignment: pw.Alignment.centerRight,
         child: pw.Paragraph(
-          text: result['dateDiff']!.values.first.length > 1
-              ? 'Total: R\$ ${result['dateDiff']!['Valor']!.fold(0, (a, b) => a + b).toStringAsFixed(2)}'
+          text: result.dateDiff.length > 1
+              ? 'Total: R\$ ${result.dateDiff.fold(0.0, (a, b) => a + b.price).toStringAsFixed(2)}'
               : '',
         ),
       ),
@@ -134,6 +135,37 @@ Future<Uint8List> generatePdf(String title, Map<String, dynamic> result) async {
     content.add(
       pw.Paragraph(
         text: 'Todas as contas possuem data de pagamento compatível.',
+      ),
+    );
+  }
+  content.add(
+    pw.SizedBox(height: 20),
+  );
+  content.add(pw.Header(level: 2, text: 'Pagamentos encontrados no sistema'));
+  if (result.paymentsFound.isNotEmpty) {
+    content.add(
+      pw.Paragraph(
+        text: result.paymentsFound.length > 1
+            ? 'Os seguintes ${result.paymentsFound.length} pagamentos foram encontrados no sistema:'
+            : 'O seguinte pagamento foi encontrado no sistema:',
+      ),
+    );
+    content.add(contentTable('paymentsFound', result.paymentsFound));
+    content.add(pw.SizedBox(height: 4.0));
+    content.add(
+      pw.Align(
+        alignment: pw.Alignment.centerRight,
+        child: pw.Paragraph(
+          text: result.paymentsFound.length > 1
+              ? 'Total: R\$ ${result.paymentsFound.fold(0.0, (a, b) => a + b.price).toStringAsFixed(2)}'
+              : '',
+        ),
+      ),
+    );
+  } else {
+    content.add(
+      pw.Paragraph(
+        text: 'Nenhum pagamento foi encontrado no sistema.',
       ),
     );
   }
@@ -148,7 +180,7 @@ Future<Uint8List> generatePdf(String title, Map<String, dynamic> result) async {
   return pdf.save();
 }
 
-pw.Widget contentTable(String dataTitle, Map<String, dynamic> result) {
+pw.Widget contentTable(String dataTitle, List<dynamic> data) {
   const List<String> tableHeaders = ['Data', 'Fornecedor', 'Valor'];
 
   return pw.TableHelper.fromTextArray(
@@ -190,14 +222,14 @@ pw.Widget contentTable(String dataTitle, Map<String, dynamic> result) {
           : tableHeaders[col],
     ),
     data: List<List<String>>.generate(
-      result[dataTitle].values.first.length,
+      data.length,
       (row) => List<String>.generate(
         tableHeaders.length,
         (col) => tableHeaders[col] == 'Data'
-            ? dateFormatShort.format(result[dataTitle][tableHeaders[col]][row])
+            ? dateFormatShort.format(data[row].date)
             : tableHeaders[col] == 'Valor'
-                ? result[dataTitle][tableHeaders[col]][row].toStringAsFixed(2)
-                : result[dataTitle][tableHeaders[col]][row].toString(),
+                ? data[row].price.toStringAsFixed(2)
+                : data[row].supplier.toString(),
       ),
     ),
   );

@@ -1,19 +1,20 @@
 import 'dart:io';
 
-import 'package:bank_check/src/backup.dart';
 import 'package:bank_check/src/excel.dart';
-import 'package:bank_check/src/variables.dart';
-import 'package:bank_check/src/widgets/report.dart';
+import 'package:bank_check/src/screens/report.dart';
+import 'package:bank_check/src/utils/backup.dart';
+import 'package:bank_check/src/utils/classes.dart';
+import 'package:bank_check/src/utils/constants.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 
 class MyHome extends StatefulWidget {
-  const MyHome({super.key, required this.result});
+  const MyHome({super.key, required this.results});
 
   @override
   State<MyHome> createState() => _MyHomeState();
-  final List<Map<String, dynamic>> result;
+  final List<Result> results;
 }
 
 class _MyHomeState extends State<MyHome> {
@@ -35,13 +36,14 @@ class _MyHomeState extends State<MyHome> {
               children: [
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
+                    //backgroundColor: secondaryColor,
                     iconColor: Colors.white,
                     maximumSize: Size(
                         MediaQuery.of(context).size.width / 2 - 20,
-                        MediaQuery.of(context).size.height * 0.18),
+                        double.infinity),
                     minimumSize: Size(
                         MediaQuery.of(context).size.width / 2 - 20,
-                        MediaQuery.of(context).size.height * 0.075),
+                        MediaQuery.of(context).size.height * 0.128),
                     foregroundColor: Colors.white,
                     side: const BorderSide(width: 1.5, color: Colors.blue),
                     shape: RoundedRectangleBorder(
@@ -49,12 +51,12 @@ class _MyHomeState extends State<MyHome> {
                     ),
                   ),
                   onPressed: () async {
-                    FilePickerResult? result =
+                    FilePickerResult? results =
                         await FilePicker.platform.pickFiles();
 
-                    if (result != null) {
+                    if (results != null) {
                       setState(() {
-                        file = File(result.files.single.path!);
+                        file = File(results.files.single.path!);
                         print(file.path);
                       });
                     } else {
@@ -82,8 +84,8 @@ class _MyHomeState extends State<MyHome> {
                               ? 'Inserir Extrato'
                               : 'Extrato',
                         ),
-                        SizedBox(
-                          height: file.path != '' ? 4.0 : 0.0,
+                        const SizedBox(
+                          height: 4.0,
                         ),
                         if (file.path != '')
                           SizedBox(
@@ -106,7 +108,7 @@ class _MyHomeState extends State<MyHome> {
                     iconColor: Colors.white,
                     maximumSize: Size(
                         MediaQuery.of(context).size.width / 2 - 20,
-                        MediaQuery.of(context).size.height * 0.18),
+                        double.infinity),
                     minimumSize: Size(
                         MediaQuery.of(context).size.width / 2 - 20,
                         MediaQuery.of(context).size.height * 0.075),
@@ -117,12 +119,12 @@ class _MyHomeState extends State<MyHome> {
                     ),
                   ),
                   onPressed: () async {
-                    FilePickerResult? result =
+                    FilePickerResult? results =
                         await FilePicker.platform.pickFiles();
 
-                    if (result != null) {
+                    if (results != null) {
                       setState(() {
-                        file2 = File(result.files.single.path!);
+                        file2 = File(results.files.single.path!);
                         print(file2.path);
                       });
                     } else {
@@ -152,12 +154,13 @@ class _MyHomeState extends State<MyHome> {
                         ),
                         Text(
                           MediaQuery.of(context).size.width > 360
-                              ? 'Inserir Despesas'
-                              : 'Despesas',
+                              ? 'Inserir Despesas ou Faturas'
+                              : 'Despesas ou Faturas',
                           //style: TextStyle(fontSize: 14),
+                          textAlign: TextAlign.center,
                         ),
-                        SizedBox(
-                          height: file2.path != '' ? 4.0 : 0.0,
+                        const SizedBox(
+                          height: 4.0,
                         ),
                         if (file2.path != '')
                           SizedBox(
@@ -180,7 +183,7 @@ class _MyHomeState extends State<MyHome> {
                 height: MediaQuery.of(context).size.height > 570 ? 16.0 : 8),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                fixedSize: Size(MediaQuery.of(context).size.width * 0.6,
+                fixedSize: Size(MediaQuery.of(context).size.width * 0.7,
                     MediaQuery.of(context).size.height * 0.07),
                 foregroundColor: Colors.white,
                 side: const BorderSide(width: 1.5, color: Colors.blue),
@@ -221,18 +224,82 @@ class _MyHomeState extends State<MyHome> {
                   );
                   await Future.delayed(const Duration(milliseconds: 500));
                   setState(() {
-                    widget.result.add(compare(context, file, file2));
-                    saveData(widget.result);
+                    widget.results.add(compare(context, file, file2));
+                    saveData(widget.results);
                   });
                 }
-                //Navigator.pushNamed(context, '/sampleItemListView');
               },
               child: const Padding(
                 padding: EdgeInsets.all(8.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text('Gerar relatório'),
+                    Text('Gerar relatório de despesas'),
+                    SizedBox(width: 4),
+                    Icon(
+                      Icons.edit,
+                      size: 18,
+                      color: Colors.white,
+                    )
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                fixedSize: Size(MediaQuery.of(context).size.width * 0.7,
+                    MediaQuery.of(context).size.height * 0.07),
+                foregroundColor: Colors.white,
+                side: const BorderSide(width: 1.5, color: Colors.blue),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30.0),
+                ),
+              ),
+              onPressed: () async {
+                if (file.path == '' || file2.path == '') {
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text(
+                        'Erro',
+                        style: TextStyle(color: Colors.red),
+                      ),
+                      content: const Text('Selecione os arquivos necessários'),
+                      actions: <Widget>[
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                          child: const Text('OK'),
+                        ),
+                      ],
+                    ),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Gerando relatório...',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      backgroundColor: Colors.green,
+                      elevation: 1,
+                    ),
+                  );
+                  await Future.delayed(const Duration(milliseconds: 500));
+                  setState(() {
+                    widget.results.add(compare(context, file, file2));
+                    saveData(widget.results);
+                  });
+                }
+              },
+              child: const Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text('Gerar relatório de faturas'),
                     SizedBox(width: 4),
                     Icon(
                       Icons.edit,
@@ -245,7 +312,7 @@ class _MyHomeState extends State<MyHome> {
             ),
             SizedBox(
                 height: MediaQuery.of(context).size.height > 570 ? 24.0 : 8),
-            if (widget.result.isNotEmpty)
+            if (widget.results.isNotEmpty)
               const Text(
                 'Relatórios gerados',
                 style: TextStyle(
@@ -256,15 +323,15 @@ class _MyHomeState extends State<MyHome> {
               ),
             SizedBox(
                 height: MediaQuery.of(context).size.height > 570 ? 16.0 : 4),
-            //if (widget.result.isNotEmpty) Report(widget.result: widget.result[0]),
-            if (widget.result.isNotEmpty)
+            //if (widget.results.isNotEmpty) Report(widget.results: widget.results[0]),
+            if (widget.results.isNotEmpty)
               SingleChildScrollView(
                 child: SizedBox(
                   height: MediaQuery.of(context).size.height * 0.49,
                   child: ListView.builder(
                     restorationId: 'missingPayments',
                     shrinkWrap: true,
-                    itemCount: widget.result.length,
+                    itemCount: widget.results.length,
                     itemBuilder: (context, index) {
                       return Column(
                         children: [
@@ -274,7 +341,7 @@ class _MyHomeState extends State<MyHome> {
                               alignment: Alignment.centerLeft,
                               child: Text(
                                   dateTimeFormat
-                                      .format(widget.result[index]['time']),
+                                      .format(widget.results[index].time),
                                   style: const TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w400)),
@@ -285,7 +352,7 @@ class _MyHomeState extends State<MyHome> {
                               Navigator.of(context).push(
                                 MaterialPageRoute(
                                   builder: (context) =>
-                                      Report(result: widget.result[index]),
+                                      Report(result: widget.results[index]),
                                 ),
                               );
                             },
@@ -317,7 +384,7 @@ class _MyHomeState extends State<MyHome> {
                                                     .width *
                                                 0.25,
                                             child: Text(
-                                              widget.result[index]['name'],
+                                              widget.results[index].name,
                                               style:
                                                   const TextStyle(fontSize: 11),
                                               overflow: TextOverflow.ellipsis,
@@ -336,7 +403,7 @@ class _MyHomeState extends State<MyHome> {
                                                     .width *
                                                 0.36,
                                             child: Text(
-                                              widget.result[index]['name2'],
+                                              widget.results[index].name2,
                                               style:
                                                   const TextStyle(fontSize: 11),
                                               overflow: TextOverflow.ellipsis,
@@ -368,9 +435,9 @@ class _MyHomeState extends State<MyHome> {
                                               ),
                                               TextButton(
                                                 onPressed: () {
-                                                  setState(() => widget.result
+                                                  setState(() => widget.results
                                                       .removeAt(index));
-                                                  saveData(widget.result);
+                                                  saveData(widget.results);
                                                   Navigator.of(context).pop();
                                                 },
                                                 child: const Text(

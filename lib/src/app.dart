@@ -1,6 +1,9 @@
-import 'package:bank_check/src/backup.dart';
-import 'package:bank_check/src/home.dart';
+import 'package:bank_check/src/screens/home.dart';
+import 'package:bank_check/src/utils/backup.dart';
+import 'package:bank_check/src/utils/classes.dart';
+import 'package:bank_check/src/utils/constants.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 import 'sample_feature/sample_item_details_view.dart';
 import 'sample_feature/sample_item_list_view.dart';
@@ -48,7 +51,7 @@ class _MyAppState extends State<MyApp> {
               appBar: AppBar(
                 title: const Text('Conciliação Bancária'),
               ),
-              body: FutureBuilder<List<Map<String, dynamic>>>(
+              body: FutureBuilder<List<Result>>(
                 future: _dataFuture,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
@@ -59,12 +62,12 @@ class _MyAppState extends State<MyApp> {
                         content: Text('Error: ${snapshot.error}'),
                       ),
                     );
-                    return const MyHome(result: []);
+                    return const MyHome(results: []);
                   } else if (snapshot.hasData) {
                     final data = snapshot.data!;
-                    return MyHome(result: data);
+                    return MyHome(results: data);
                   } else {
-                    return const MyHome(result: []);
+                    return const MyHome(results: []);
                   }
                 },
               ),
@@ -102,10 +105,13 @@ class _MyAppState extends State<MyApp> {
             // Define a light and dark color theme. Then, read the user's
             // preferred ThemeMode (light, dark, or system default) from the
             // SettingsController to display the correct theme.
-            theme: ThemeData(
-                colorScheme: ColorScheme.fromSwatch(
-                    primarySwatch: Colors.blue, brightness: Brightness.dark),
-                useMaterial3: true),
+            theme: ThemeData.dark().copyWith(
+              scaffoldBackgroundColor: bgColor,
+              textTheme:
+                  GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme)
+                      .apply(bodyColor: Colors.white),
+              canvasColor: secondaryColor,
+            ),
             themeMode: widget.settingsController.themeMode,
 
             // Define a function to handle named routes in order to support

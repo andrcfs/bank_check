@@ -1,9 +1,9 @@
 import 'dart:ui';
 
-import 'package:bank_check/src/variables.dart';
+import 'package:bank_check/src/utils/classes.dart';
+import 'package:bank_check/src/utils/constants.dart';
 import 'package:bank_check/src/widgets/pdf_view.dart';
 import 'package:flutter/material.dart';
-import 'package:printing/printing.dart';
 
 class Report extends StatelessWidget {
   const Report({
@@ -11,7 +11,7 @@ class Report extends StatelessWidget {
     required this.result,
   });
 
-  final Map<String, dynamic> result;
+  final Result result;
 
   @override
   Widget build(BuildContext context) {
@@ -22,21 +22,21 @@ class Report extends StatelessWidget {
           IconButton(
               icon: const Icon(Icons.share),
               onPressed: () async {
-                final String name = result['name']
+                final String name = result.name
                     .toString()
                     .replaceAll('.xlsx', '')
                     .replaceAll(' ', '');
 
-                await Printing.sharePdf(
+                /* await Printing.sharePdf(
                     bytes: await generatePdf('Relatório', result),
-                    filename: 'relatorio-$name.pdf');
-                /* Navigator.of(context).push(
+                    filename: 'relatorio-$name.pdf'); */
+                Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (context) => PdfView(
                       result: result,
                     ),
                   ),
-                ); */
+                );
               }),
         ],
       ),
@@ -81,10 +81,9 @@ class Report extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          result['missingPayments']!.values.first.isNotEmpty
-                              ? result['missingPayments']!.values.first.length >
-                                      1
-                                  ? 'Os seguintes ${result['missingPayments']!.values.first.length} pagamentos não constam nas contas do sistema:'
+                          result.missingPayments.isNotEmpty
+                              ? result.missingPayments.length > 1
+                                  ? 'Os seguintes ${result.missingPayments.length} pagamentos não constam nas contas do sistema:'
                                   : 'O seguinte pagamento não consta nas contas do sistema:'
                               : 'Todos os pagamentos do extrato foram encontrados no sistema.',
                           style: const TextStyle(
@@ -100,14 +99,13 @@ class Report extends StatelessWidget {
                         ),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children:
-                              result['missingPayments']!.values.first.isNotEmpty
-                                  ? [
-                                      const Text('Data'),
-                                      const Text('Fornecedor'),
-                                      const Text('Valor(R\$)'),
-                                    ]
-                                  : [],
+                          children: result.missingPayments.isNotEmpty
+                              ? [
+                                  const Text('Data'),
+                                  const Text('Fornecedor'),
+                                  const Text('Valor(R\$)'),
+                                ]
+                              : [],
                         ),
                         SizedBox(
                           height: MediaQuery.of(context).size.height > 570
@@ -120,11 +118,10 @@ class Report extends StatelessWidget {
                           child: ListView.builder(
                             restorationId: 'missingPayments',
                             shrinkWrap: true,
-                            itemCount:
-                                result['missingPayments']!.values.first.length,
+                            itemCount: result.missingPayments.length,
                             itemBuilder: (context, index) {
                               DateTime date =
-                                  result['missingPayments']!['Data']![index];
+                                  result.missingPayments[index].date;
                               String formattedDate =
                                   dateFormatShort.format(date);
                               return Padding(
@@ -142,13 +139,13 @@ class Report extends StatelessWidget {
                                       width: MediaQuery.of(context).size.width *
                                           0.5,
                                       child: Text(
-                                        '${result['missingPayments']!['Fornecedor']![index]}',
+                                        result.missingPayments[index].supplier,
                                         textAlign: TextAlign.left,
                                         style: const TextStyle(fontSize: 11),
                                       ),
                                     ),
-                                    Text(
-                                        '${result['missingPayments']!['Valor']![index].toStringAsFixed(2)}'),
+                                    Text(result.missingPayments[index].price
+                                        .toStringAsFixed(2)),
                                   ],
                                 ),
                               );
@@ -165,8 +162,8 @@ class Report extends StatelessWidget {
                           child: Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: Text(
-                              result['missingPayments']!.values.first.length > 1
-                                  ? 'Total: R\$ ${result['missingPayments']!['Valor']!.fold(0, (a, b) => a + b).toStringAsFixed(2)}'
+                              result.missingPayments.length > 1
+                                  ? 'Total: R\$ ${result.missingPayments.fold(0.0, (sum, item) => sum + item.price).toStringAsFixed(2)}'
                                   : '',
                               style: const TextStyle(
                                 fontWeight: FontWeight.w400,
@@ -218,9 +215,9 @@ class Report extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          result['priceDiff']!.values.first.isNotEmpty
-                              ? result['priceDiff']!.values.first.length > 1
-                                  ? 'As seguintes ${result['priceDiff']!.values.first.length} contas não foram encontradas no extrato:'
+                          result.priceDiff.isNotEmpty
+                              ? result.priceDiff.length > 1
+                                  ? 'As seguintes ${result.priceDiff.length} contas não foram encontradas no extrato:'
                                   : 'A seguinte conta não foi encontrada no extrato:'
                               : 'Todas as contas foram encontradas no extrato',
                           style: const TextStyle(
@@ -236,7 +233,7 @@ class Report extends StatelessWidget {
                         ),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: result['priceDiff']!.values.first.isNotEmpty
+                          children: result.priceDiff.isNotEmpty
                               ? [
                                   const Text('Data'),
                                   const Text('Fornecedor'),
@@ -251,19 +248,16 @@ class Report extends StatelessWidget {
                         ),
                         SizedBox(
                           height: clampDouble(
-                              (result['priceDiff']!.values.first.length)
-                                      .toDouble() *
-                                  40,
+                              (result.priceDiff.length).toDouble() * 40,
                               50.0,
                               MediaQuery.of(context).size.height * 0.3),
                           width: MediaQuery.of(context).size.width,
                           child: ListView.builder(
                             restorationId: 'priceDiff',
                             shrinkWrap: true,
-                            itemCount: result['priceDiff']!.values.first.length,
+                            itemCount: result.priceDiff.length,
                             itemBuilder: (context, index) {
-                              DateTime date =
-                                  result['priceDiff']!['Data']![index];
+                              DateTime date = result.priceDiff[index].date;
                               String formattedDate =
                                   dateFormatShort.format(date);
                               return Padding(
@@ -284,15 +278,14 @@ class Report extends StatelessWidget {
                                       width: MediaQuery.of(context).size.width *
                                           0.5,
                                       child: Text(
-                                        '${result['priceDiff']!['Fornecedor']![index]}',
+                                        result.priceDiff[index].supplier,
                                         style: const TextStyle(fontSize: 11),
                                       ),
                                     ),
                                     const SizedBox(
                                       width: 7.0,
                                     ),
-                                    Text(
-                                        '${result['priceDiff']!['Valor']![index]}'),
+                                    Text('${result.priceDiff[index].price}'),
                                   ],
                                 ),
                               );
@@ -309,8 +302,8 @@ class Report extends StatelessWidget {
                           child: Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: Text(
-                              result['priceDiff']!.values.first.isNotEmpty
-                                  ? 'Total: R\$ ${result['priceDiff']!['Valor']!.fold(0, (a, b) => a + b).toStringAsFixed(2)}'
+                              result.priceDiff.isNotEmpty
+                                  ? 'Total: R\$ ${result.priceDiff.fold(0.0, (sum, item) => sum + item.price).toStringAsFixed(2)}'
                                   : '',
                               style: const TextStyle(
                                 fontWeight: FontWeight.w400,
@@ -325,9 +318,9 @@ class Report extends StatelessWidget {
                               : 10,
                         ),
                         Text(
-                          result['dateDiff']!.values.first.isNotEmpty
-                              ? result['dateDiff']!.values.first.length > 1
-                                  ? 'As seguintes ${result['dateDiff']!.values.first.length} contas possuem discrepância maior que 3 dias no seu pagamento:'
+                          result.dateDiff.isNotEmpty
+                              ? result.dateDiff.length > 1
+                                  ? 'As seguintes ${result.dateDiff.length} contas possuem discrepância maior que 3 dias no seu pagamento:'
                                   : 'A seguinte conta possui discrepância maior que 3 dias no seu pagamento:'
                               : 'Nenhuma discrepância de data encontrada.',
                           style: const TextStyle(
@@ -343,7 +336,7 @@ class Report extends StatelessWidget {
                         ),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: result['dateDiff']!.values.first.isNotEmpty
+                          children: result.dateDiff.isNotEmpty
                               ? [
                                   const Text('Data'),
                                   const Text('Fornecedor'),
@@ -357,17 +350,16 @@ class Report extends StatelessWidget {
                               : 2,
                         ),
                         SizedBox(
-                          height: result['dateDiff']!.values.first.isNotEmpty
+                          height: result.dateDiff.isNotEmpty
                               ? MediaQuery.of(context).size.height - 490
                               : 10,
                           width: MediaQuery.of(context).size.width,
                           child: ListView.builder(
                             restorationId: 'dateDiff',
                             shrinkWrap: true,
-                            itemCount: result['dateDiff']!.values.first.length,
+                            itemCount: result.dateDiff.length,
                             itemBuilder: (context, index) {
-                              DateTime date =
-                                  result['dateDiff']!['Data']![index];
+                              DateTime date = result.dateDiff[index].date;
                               String formattedDate =
                                   dateFormatShort.format(date);
                               return Padding(
@@ -388,15 +380,14 @@ class Report extends StatelessWidget {
                                       width: MediaQuery.of(context).size.width *
                                           0.5,
                                       child: Text(
-                                        '${result['dateDiff']!['Fornecedor']![index]}',
+                                        result.dateDiff[index].supplier,
                                         style: const TextStyle(fontSize: 11),
                                       ),
                                     ),
                                     const SizedBox(
                                       width: 7.0,
                                     ),
-                                    Text(
-                                        '${result['dateDiff']!['Valor']![index]}'),
+                                    Text('${result.dateDiff[index].price}'),
                                   ],
                                 ),
                               );
@@ -413,8 +404,8 @@ class Report extends StatelessWidget {
                           child: Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: Text(
-                              result['dateDiff']!.values.first.length > 1
-                                  ? 'Total: R\$ ${result['dateDiff']!['Valor']!.fold(0, (a, b) => a + b).toStringAsFixed(2)}'
+                              result.dateDiff.length > 1
+                                  ? 'Total: R\$ ${result.dateDiff.fold(0.0, (sum, item) => sum + item.price).toStringAsFixed(2)}'
                                   : '',
                               style: const TextStyle(
                                 fontWeight: FontWeight.w400,
@@ -431,6 +422,144 @@ class Report extends StatelessWidget {
                   ),
                 ),
               ),
+              const Align(
+                alignment: Alignment.centerLeft,
+                child: Padding(
+                  padding: EdgeInsets.all(8.0),
+                  child: Text(
+                    'Pagamentos Encontrados',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w400,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ),
+              if (result.paymentsFound.isNotEmpty)
+                Container(
+                  height: MediaQuery.of(context).size.height * 0.6,
+                  width: MediaQuery.of(context).size.width - 16,
+                  padding: EdgeInsets.symmetric(
+                      vertical:
+                          MediaQuery.of(context).size.height > 570 ? 8.0 : 4,
+                      horizontal: 12.0),
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: Colors.blue,
+                      width: 1.5,
+                    ),
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+                  child: SingleChildScrollView(
+                    scrollDirection: Axis.vertical,
+                    child: SizedBox(
+                      width: MediaQuery.of(context).size.width - 16,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            result.paymentsFound.isNotEmpty
+                                ? result.paymentsFound.length > 1
+                                    ? 'Os seguintes ${result.paymentsFound.length} pagamentos foram encontrados no sistema:'
+                                    : 'O seguinte pagamento foi encontrado no sistema:'
+                                : 'Nenhum pagamento encontrado.',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w500,
+                              fontSize: 16,
+                            ),
+                            textAlign: TextAlign.start,
+                          ),
+                          SizedBox(
+                            height: MediaQuery.of(context).size.height > 570
+                                ? 8.0
+                                : 4,
+                          ),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: result.paymentsFound.isNotEmpty
+                                ? [
+                                    const Text('Data'),
+                                    const Text('Fornecedor'),
+                                    const Text('Valor(R\$)'),
+                                  ]
+                                : [],
+                          ),
+                          SizedBox(
+                            height: MediaQuery.of(context).size.height > 570
+                                ? 4.0
+                                : 2,
+                          ),
+                          SizedBox(
+                            height: MediaQuery.of(context).size.height * 0.39,
+                            width: MediaQuery.of(context).size.width,
+                            child: ListView.builder(
+                              restorationId: 'paymentsFound',
+                              shrinkWrap: true,
+                              itemCount: result.paymentsFound.length,
+                              itemBuilder: (context, index) {
+                                DateTime date =
+                                    result.paymentsFound[index].date;
+                                String formattedDate =
+                                    dateFormatShort.format(date);
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      vertical: 12.0),
+                                  child: Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      Text(
+                                        formattedDate,
+                                        style: const TextStyle(fontSize: 11),
+                                      ),
+                                      SizedBox(
+                                        width:
+                                            MediaQuery.of(context).size.width *
+                                                0.5,
+                                        child: Text(
+                                          result.paymentsFound[index].supplier,
+                                          textAlign: TextAlign.left,
+                                          style: const TextStyle(fontSize: 11),
+                                        ),
+                                      ),
+                                      Text(result.paymentsFound[index].price
+                                          .toStringAsFixed(2)),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                          SizedBox(
+                            height: MediaQuery.of(context).size.height > 570
+                                ? 4.0
+                                : 2,
+                          ),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Text(
+                                result.paymentsFound.length > 1
+                                    ? 'Total: R\$ ${result.paymentsFound.fold(0.0, (sum, item) => sum + item.price).toStringAsFixed(2)}'
+                                    : '',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w400,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                          ),
+                          SizedBox(
+                            height: MediaQuery.of(context).size.height > 570
+                                ? 8.0
+                                : 4,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
             ],
           ),
         ),
