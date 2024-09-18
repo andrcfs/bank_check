@@ -1,19 +1,20 @@
 import 'dart:io';
 
-import 'package:bank_check/src/backup.dart';
-import 'package:bank_check/src/constants.dart';
 import 'package:bank_check/src/excel.dart';
 import 'package:bank_check/src/screens/report.dart';
+import 'package:bank_check/src/utils/backup.dart';
+import 'package:bank_check/src/utils/classes.dart';
+import 'package:bank_check/src/utils/constants.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 
 class MyHome extends StatefulWidget {
-  const MyHome({super.key, required this.result});
+  const MyHome({super.key, required this.results});
 
   @override
   State<MyHome> createState() => _MyHomeState();
-  final List<Map<String, dynamic>> result;
+  final List<Result> results;
 }
 
 class _MyHomeState extends State<MyHome> {
@@ -50,12 +51,12 @@ class _MyHomeState extends State<MyHome> {
                     ),
                   ),
                   onPressed: () async {
-                    FilePickerResult? result =
+                    FilePickerResult? results =
                         await FilePicker.platform.pickFiles();
 
-                    if (result != null) {
+                    if (results != null) {
                       setState(() {
-                        file = File(result.files.single.path!);
+                        file = File(results.files.single.path!);
                         print(file.path);
                       });
                     } else {
@@ -118,12 +119,12 @@ class _MyHomeState extends State<MyHome> {
                     ),
                   ),
                   onPressed: () async {
-                    FilePickerResult? result =
+                    FilePickerResult? results =
                         await FilePicker.platform.pickFiles();
 
-                    if (result != null) {
+                    if (results != null) {
                       setState(() {
-                        file2 = File(result.files.single.path!);
+                        file2 = File(results.files.single.path!);
                         print(file2.path);
                       });
                     } else {
@@ -223,8 +224,8 @@ class _MyHomeState extends State<MyHome> {
                   );
                   await Future.delayed(const Duration(milliseconds: 500));
                   setState(() {
-                    widget.result.add(compare(context, file, file2));
-                    saveData(widget.result);
+                    widget.results.add(compare(context, file, file2));
+                    saveData(widget.results);
                   });
                 }
               },
@@ -288,8 +289,8 @@ class _MyHomeState extends State<MyHome> {
                   );
                   await Future.delayed(const Duration(milliseconds: 500));
                   setState(() {
-                    widget.result.add(compare(context, file, file2));
-                    saveData(widget.result);
+                    widget.results.add(compare(context, file, file2));
+                    saveData(widget.results);
                   });
                 }
               },
@@ -311,7 +312,7 @@ class _MyHomeState extends State<MyHome> {
             ),
             SizedBox(
                 height: MediaQuery.of(context).size.height > 570 ? 24.0 : 8),
-            if (widget.result.isNotEmpty)
+            if (widget.results.isNotEmpty)
               const Text(
                 'Relatórios gerados',
                 style: TextStyle(
@@ -322,15 +323,15 @@ class _MyHomeState extends State<MyHome> {
               ),
             SizedBox(
                 height: MediaQuery.of(context).size.height > 570 ? 16.0 : 4),
-            //if (widget.result.isNotEmpty) Report(widget.result: widget.result[0]),
-            if (widget.result.isNotEmpty)
+            //if (widget.results.isNotEmpty) Report(widget.results: widget.results[0]),
+            if (widget.results.isNotEmpty)
               SingleChildScrollView(
                 child: SizedBox(
                   height: MediaQuery.of(context).size.height * 0.49,
                   child: ListView.builder(
                     restorationId: 'missingPayments',
                     shrinkWrap: true,
-                    itemCount: widget.result.length,
+                    itemCount: widget.results.length,
                     itemBuilder: (context, index) {
                       return Column(
                         children: [
@@ -340,7 +341,7 @@ class _MyHomeState extends State<MyHome> {
                               alignment: Alignment.centerLeft,
                               child: Text(
                                   dateTimeFormat
-                                      .format(widget.result[index]['time']),
+                                      .format(widget.results[index].time),
                                   style: const TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w400)),
@@ -351,7 +352,7 @@ class _MyHomeState extends State<MyHome> {
                               Navigator.of(context).push(
                                 MaterialPageRoute(
                                   builder: (context) =>
-                                      Report(result: widget.result[index]),
+                                      Report(result: widget.results[index]),
                                 ),
                               );
                             },
@@ -383,7 +384,7 @@ class _MyHomeState extends State<MyHome> {
                                                     .width *
                                                 0.25,
                                             child: Text(
-                                              widget.result[index]['name'],
+                                              widget.results[index].name,
                                               style:
                                                   const TextStyle(fontSize: 11),
                                               overflow: TextOverflow.ellipsis,
@@ -402,7 +403,7 @@ class _MyHomeState extends State<MyHome> {
                                                     .width *
                                                 0.36,
                                             child: Text(
-                                              widget.result[index]['name2'],
+                                              widget.results[index].name2,
                                               style:
                                                   const TextStyle(fontSize: 11),
                                               overflow: TextOverflow.ellipsis,
@@ -434,9 +435,9 @@ class _MyHomeState extends State<MyHome> {
                                               ),
                                               TextButton(
                                                 onPressed: () {
-                                                  setState(() => widget.result
+                                                  setState(() => widget.results
                                                       .removeAt(index));
-                                                  saveData(widget.result);
+                                                  saveData(widget.results);
                                                   Navigator.of(context).pop();
                                                 },
                                                 child: const Text(

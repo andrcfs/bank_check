@@ -1,6 +1,7 @@
 import 'dart:io';
 
-import 'package:bank_check/src/constants.dart';
+import 'package:bank_check/src/utils/classes.dart';
+import 'package:bank_check/src/utils/constants.dart';
 import 'package:excel/excel.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
@@ -16,14 +17,14 @@ Map<String, int> columnIndices = {};
 List<int> indices = [];
 bool isError = false;
 
-Map<String, dynamic> compare(context, File file, File file2) {
+Result compare(context, File file, File file2) {
   isError = false;
-  List<Data> transformedData = [];
-  List<Data> transformedData2 = [];
-  List<Data> priceDiff = [];
-  List<Data> dateDiff = [];
-  List<Data> missingPayments = [];
-  List<Data> paymentsFound = [];
+  List<MyData> transformedData = [];
+  List<MyData> transformedData2 = [];
+  List<MyData> priceDiff = [];
+  List<MyData> dateDiff = [];
+  List<MyData> missingPayments = [];
+  List<MyData> paymentsFound = [];
   indices = [];
   Sheet table = read(file);
   Sheet table2 = read(file2);
@@ -33,59 +34,50 @@ Map<String, dynamic> compare(context, File file, File file2) {
   print(transformedData2.length);
 
   for (int i = 0; i < transformedData2.length; i++) {
-    final List indexes = [];
-    indexes.addAll(transformedData['Valor']
-        .where((e) => e == transformedData2['Valor'][i]));
+    final List<MyData> indexes = transformedData
+        .where((e) => e.price == transformedData2[i].price)
+        .toList();
     final int index =
-        transformedData['Valor'].indexOf(transformedData2['Valor'][i]);
+        transformedData.indexWhere((e) => e.price == transformedData2[i].price);
     final DateTime date;
     if (index < 0) {
-      priceDiff['Data'].add(transformedData2['Data'][i]);
-      priceDiff['Valor'].add(transformedData2['Valor'][i]);
-      priceDiff['Fornecedor'].add(transformedData2['Fornecedor'][i]);
-      indices.add(i);
+      priceDiff.add(transformedData2[i]);
       continue;
     } else {
-      date = transformedData['Data'][index];
+      date = transformedData[index].date;
     }
 
-    final int days = date.difference(transformedData2['Data'][i]).inDays;
+    final int days = date.difference(transformedData2[i].date).inDays;
 
     if (days.abs() <= 2) {
-      paymentsFound['Data'].add(transformedData2['Data'][i]);
-      paymentsFound['Valor'].add(transformedData2['Valor'][i]);
-      paymentsFound['Fornecedor'].add(transformedData2['Fornecedor'][i]);
+      paymentsFound.add(transformedData2[i]);
       continue;
     } else if (indexes.length < 2 && days.abs() % 7 != 0) {
-      dateDiff['Data'].add(transformedData2['Data'][i]);
-      dateDiff['Valor'].add(transformedData2['Valor'][i]);
-      dateDiff['Fornecedor'].add(transformedData2['Fornecedor'][i]);
-      indices.add(i);
+      dateDiff.add(transformedData2[i]);
     }
   }
-  for (int i = 0; i < transformedData.values.first.length; i++) {
-    if (!transformedData2['Valor'].contains(transformedData['Valor'][i])) {
-      missingPayments['Data'].add(transformedData['Data'][i]);
-      missingPayments['Valor'].add(transformedData['Valor'][i]);
-      missingPayments['Fornecedor'].add(transformedData['Fornecedor'][i]);
+  for (int i = 0; i < transformedData.length; i++) {
+    if (!transformedData2.any((e) => e.price == transformedData[i].price)) {
+      missingPayments.add(transformedData[i]);
     }
   }
   //print(missingPayments);
   //print(dateDiff);
   //print(indices);
   //print(count);
-  return {
-    'name': basename(file.path),
-    'name2': basename(file2.path),
-    'time': DateTime.now(),
-    'missingPayments': missingPayments,
-    'priceDiff': priceDiff,
-    'dateDiff': dateDiff,
-    'paymentsFound': paymentsFound,
-  };
+  final result = Result(
+      name: basename(file.path),
+      name2: basename(file2.path),
+      type: 'despesas',
+      time: DateTime.now(),
+      missingPayments: missingPayments,
+      priceDiff: priceDiff,
+      dateDiff: dateDiff,
+      paymentsFound: paymentsFound);
+  return result;
 }
 
-void transform(Sheet table, List<Data> transformedData) {
+void transform(Sheet table, List<MyData> transformedData) {
   // Identify the columns that match the specified data types
   for (int row = 4; row < table.maxRows - 3; row++) {
     if (table.rows[row][9]!.value.toString() != 'D') {
@@ -97,18 +89,18 @@ void transform(Sheet table, List<Data> transformedData) {
         .toString()
         .replaceAll('.', '')
         .replaceAll(',', '.'));
-    var supplier = table.rows[row][10]!.value.toString().replaceAll(' ', '');
+    var supplier = table.rows[row][10]!.value.toString();
 
-    if (supplier == '') {
+    if (supplier.replaceAll(' ', '') == '') {
       supplier = table.rows[row][7]!.value.toString();
     }
 
-    final data = Data(date, price, supplier);
+    final data = MyData(date, price, supplier);
     transformedData.add(data);
   }
 }
 
-void transform2(context, Sheet table, List<Data> transformedData2) {
+void transform2(context, Sheet table, List<MyData> transformedData2) {
   // Identify the columns that match the specified data types
   for (var cell in table.rows[0]) {
     if (cell != null && columnNames.contains(cell.value.toString())) {
@@ -143,7 +135,7 @@ void transform2(context, Sheet table, List<Data> transformedData2) {
     if (supplier == '' && valuesList.length > 3) {
       supplier = table.rows[row][valuesList[2]]!.value.toString();
     }
-    final data = Data(date, price, supplier);
+    final data = MyData(date, price, supplier);
     transformedData2.add(data);
   }
 }
@@ -154,12 +146,4 @@ Sheet read(File file) {
   var table = excel.tables.values.first;
 
   return table;
-}
-
-class Data {
-  final DateTime date;
-  final double price;
-  final String supplier;
-
-  Data(this.date, this.price, this.supplier);
 }

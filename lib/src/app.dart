@@ -1,6 +1,7 @@
-import 'package:bank_check/src/backup.dart';
-import 'package:bank_check/src/constants.dart';
 import 'package:bank_check/src/screens/home.dart';
+import 'package:bank_check/src/utils/backup.dart';
+import 'package:bank_check/src/utils/classes.dart';
+import 'package:bank_check/src/utils/constants.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -50,7 +51,7 @@ class _MyAppState extends State<MyApp> {
               appBar: AppBar(
                 title: const Text('Conciliação Bancária'),
               ),
-              body: FutureBuilder<List<Map<String, dynamic>>>(
+              body: FutureBuilder<List<Result>>(
                 future: _dataFuture,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
@@ -61,12 +62,12 @@ class _MyAppState extends State<MyApp> {
                         content: Text('Error: ${snapshot.error}'),
                       ),
                     );
-                    return const MyHome(result: []);
+                    return const MyHome(results: []);
                   } else if (snapshot.hasData) {
                     final data = snapshot.data!;
-                    return MyHome(result: data);
+                    return MyHome(results: data);
                   } else {
-                    return const MyHome(result: []);
+                    return const MyHome(results: []);
                   }
                 },
               ),
