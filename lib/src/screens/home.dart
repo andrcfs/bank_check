@@ -1,9 +1,9 @@
 import 'dart:io';
 
 import 'package:bank_check/src/backup.dart';
+import 'package:bank_check/src/constants.dart';
 import 'package:bank_check/src/excel.dart';
-import 'package:bank_check/src/variables.dart';
-import 'package:bank_check/src/widgets/report.dart';
+import 'package:bank_check/src/screens/report.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
@@ -35,13 +35,14 @@ class _MyHomeState extends State<MyHome> {
               children: [
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
+                    //backgroundColor: secondaryColor,
                     iconColor: Colors.white,
                     maximumSize: Size(
                         MediaQuery.of(context).size.width / 2 - 20,
-                        MediaQuery.of(context).size.height * 0.18),
+                        double.infinity),
                     minimumSize: Size(
                         MediaQuery.of(context).size.width / 2 - 20,
-                        MediaQuery.of(context).size.height * 0.075),
+                        MediaQuery.of(context).size.height * 0.128),
                     foregroundColor: Colors.white,
                     side: const BorderSide(width: 1.5, color: Colors.blue),
                     shape: RoundedRectangleBorder(
@@ -82,8 +83,8 @@ class _MyHomeState extends State<MyHome> {
                               ? 'Inserir Extrato'
                               : 'Extrato',
                         ),
-                        SizedBox(
-                          height: file.path != '' ? 4.0 : 0.0,
+                        const SizedBox(
+                          height: 4.0,
                         ),
                         if (file.path != '')
                           SizedBox(
@@ -106,7 +107,7 @@ class _MyHomeState extends State<MyHome> {
                     iconColor: Colors.white,
                     maximumSize: Size(
                         MediaQuery.of(context).size.width / 2 - 20,
-                        MediaQuery.of(context).size.height * 0.18),
+                        double.infinity),
                     minimumSize: Size(
                         MediaQuery.of(context).size.width / 2 - 20,
                         MediaQuery.of(context).size.height * 0.075),
@@ -152,12 +153,13 @@ class _MyHomeState extends State<MyHome> {
                         ),
                         Text(
                           MediaQuery.of(context).size.width > 360
-                              ? 'Inserir Despesas'
-                              : 'Despesas',
+                              ? 'Inserir Despesas ou Faturas'
+                              : 'Despesas ou Faturas',
                           //style: TextStyle(fontSize: 14),
+                          textAlign: TextAlign.center,
                         ),
-                        SizedBox(
-                          height: file2.path != '' ? 4.0 : 0.0,
+                        const SizedBox(
+                          height: 4.0,
                         ),
                         if (file2.path != '')
                           SizedBox(
@@ -180,7 +182,7 @@ class _MyHomeState extends State<MyHome> {
                 height: MediaQuery.of(context).size.height > 570 ? 16.0 : 8),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                fixedSize: Size(MediaQuery.of(context).size.width * 0.6,
+                fixedSize: Size(MediaQuery.of(context).size.width * 0.7,
                     MediaQuery.of(context).size.height * 0.07),
                 foregroundColor: Colors.white,
                 side: const BorderSide(width: 1.5, color: Colors.blue),
@@ -225,14 +227,78 @@ class _MyHomeState extends State<MyHome> {
                     saveData(widget.result);
                   });
                 }
-                //Navigator.pushNamed(context, '/sampleItemListView');
               },
               child: const Padding(
                 padding: EdgeInsets.all(8.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text('Gerar relatório'),
+                    Text('Gerar relatório de despesas'),
+                    SizedBox(width: 4),
+                    Icon(
+                      Icons.edit,
+                      size: 18,
+                      color: Colors.white,
+                    )
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                fixedSize: Size(MediaQuery.of(context).size.width * 0.7,
+                    MediaQuery.of(context).size.height * 0.07),
+                foregroundColor: Colors.white,
+                side: const BorderSide(width: 1.5, color: Colors.blue),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30.0),
+                ),
+              ),
+              onPressed: () async {
+                if (file.path == '' || file2.path == '') {
+                  showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text(
+                        'Erro',
+                        style: TextStyle(color: Colors.red),
+                      ),
+                      content: const Text('Selecione os arquivos necessários'),
+                      actions: <Widget>[
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                          child: const Text('OK'),
+                        ),
+                      ],
+                    ),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Gerando relatório...',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                      backgroundColor: Colors.green,
+                      elevation: 1,
+                    ),
+                  );
+                  await Future.delayed(const Duration(milliseconds: 500));
+                  setState(() {
+                    widget.result.add(compare(context, file, file2));
+                    saveData(widget.result);
+                  });
+                }
+              },
+              child: const Padding(
+                padding: EdgeInsets.all(8.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text('Gerar relatório de faturas'),
                     SizedBox(width: 4),
                     Icon(
                       Icons.edit,

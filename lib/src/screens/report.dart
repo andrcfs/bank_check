@@ -1,6 +1,6 @@
 import 'dart:ui';
 
-import 'package:bank_check/src/variables.dart';
+import 'package:bank_check/src/constants.dart';
 import 'package:bank_check/src/widgets/pdf_view.dart';
 import 'package:flutter/material.dart';
 import 'package:printing/printing.dart';
