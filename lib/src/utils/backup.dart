@@ -32,13 +32,22 @@ Future<List<Result>> loadData() async {
 
       // Convert JSON string back to List<Result>
       final List<dynamic> jsonData = jsonDecode(jsonString);
-      return jsonData
-          .map((item) => Result.fromJson(item as Map<String, dynamic>))
-          .toList();
+      return jsonData.map((item) => resultFromJson(item)).toList();
     }
   } catch (e) {
     print("Error reading file: $e");
   }
 
   return [];
+}
+
+Result resultFromJson(Map<String, dynamic> json) {
+  switch (json['type'] as String) {
+    case 'despesas':
+      return ResultDebit.fromJson(json);
+    case 'receitas':
+      return ResultCredit.fromJson(json);
+    default:
+      throw Exception('Unknown result type: ${json['type']}');
+  }
 }

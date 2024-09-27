@@ -13,36 +13,28 @@ class PdfView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print(result.missingPayments.length);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Flutter PDF Visualization'),
       ),
       body: PdfPreview(
         maxPageWidth: 700,
-        build: (format) => generatePdf('Relatório', result),
-      ),
-    );
-  }
-
-//
-  pw.Widget contentTable2(pw.Context context, String dataTitle) {
-    const List<String> tableHeaders = ['Data', 'Fornecedor', 'Valor'];
-
-    return pw.TableHelper.fromTextArray(
-      context: context,
-      data: List<List<String>>.generate(
-        result.dateDiff.length,
-        (row) => List<String>.generate(
-          tableHeaders.length,
-          (col) => '$col x $row',
-        ),
+        build: (format) {
+          switch (result) {
+            case ResultDebit():
+              return generateDebitPdf('Relatório', result as ResultDebit);
+            case ResultCredit():
+              return generateCreditPdf('Relatório', result as ResultCredit);
+            default:
+              throw Exception('Unknown result type');
+          }
+        },
       ),
     );
   }
 }
 
-Future<Uint8List> generatePdf(String title, Result result) async {
+Future<Uint8List> generateDebitPdf(String title, ResultDebit result) async {
   final pdf = pw.Document(version: PdfVersion.pdf_1_5, compress: true);
   List<pw.Widget> content = [
     pw.Header(level: 0, text: 'Relatório de Conciliação Bancária'),
@@ -146,8 +138,8 @@ Future<Uint8List> generatePdf(String title, Result result) async {
     content.add(
       pw.Paragraph(
         text: result.paymentsFound.length > 1
-            ? 'Os seguintes ${result.paymentsFound.length} pagamentos foram encontrados no sistema:'
-            : 'O seguinte pagamento foi encontrado no sistema:',
+            ? 'Os seguintes ${result.paymentsFound.length} pagamentos estão conciliados:'
+            : 'Apenas um pagamento está conciliado:',
       ),
     );
     content.add(contentTable('paymentsFound', result.paymentsFound));
@@ -233,4 +225,27 @@ pw.Widget contentTable(String dataTitle, List<dynamic> data) {
       ),
     ),
   );
+}
+
+Future<Uint8List> generateCreditPdf(String title, ResultCredit result) async {
+  final pdf = pw.Document(version: PdfVersion.pdf_1_5, compress: true);
+  List<pw.Widget> content = [
+    pw.Header(level: 0, text: 'Relatório de Conciliação Bancária'),
+    pw.Header(level: 2, text: 'Extrato X Despesas'),
+  ];
+
+  content.add(
+    pw.Paragraph(
+      text: 'Nenhum pagamento foi encontrado no sistema.',
+    ),
+  );
+
+  pdf.addPage(
+    pw.MultiPage(
+      pageFormat: PdfPageFormat.a4,
+      build: (context) => content,
+    ),
+  );
+
+  return pdf.save();
 }

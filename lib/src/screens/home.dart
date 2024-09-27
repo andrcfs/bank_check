@@ -1,10 +1,9 @@
 import 'dart:io';
 
 import 'package:bank_check/src/excel.dart';
-import 'package:bank_check/src/screens/report.dart';
 import 'package:bank_check/src/utils/backup.dart';
 import 'package:bank_check/src/utils/classes.dart';
-import 'package:bank_check/src/utils/constants.dart';
+import 'package:bank_check/src/widgets/history_list.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
@@ -224,7 +223,7 @@ class _MyHomeState extends State<MyHome> {
                   );
                   await Future.delayed(const Duration(milliseconds: 500));
                   setState(() {
-                    widget.results.add(compare(context, file, file2));
+                    widget.results.add(compareDebit(context, file, file2));
                     saveData(widget.results);
                   });
                 }
@@ -234,7 +233,7 @@ class _MyHomeState extends State<MyHome> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text('Gerar relatório de despesas'),
+                    Text('Gerar relatório de Despesas'),
                     SizedBox(width: 4),
                     Icon(
                       Icons.edit,
@@ -289,7 +288,7 @@ class _MyHomeState extends State<MyHome> {
                   );
                   await Future.delayed(const Duration(milliseconds: 500));
                   setState(() {
-                    widget.results.add(compare(context, file, file2));
+                    widget.results.add(compareCredit(context, file, file2));
                     saveData(widget.results);
                   });
                 }
@@ -299,7 +298,7 @@ class _MyHomeState extends State<MyHome> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text('Gerar relatório de faturas'),
+                    Text('Gerar relatório de Receitas'),
                     SizedBox(width: 4),
                     Icon(
                       Icons.edit,
@@ -313,158 +312,9 @@ class _MyHomeState extends State<MyHome> {
             SizedBox(
                 height: MediaQuery.of(context).size.height > 570 ? 24.0 : 8),
             if (widget.results.isNotEmpty)
-              const Text(
-                'Relatórios gerados',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w400,
-                ),
-                textAlign: TextAlign.start,
-              ),
-            SizedBox(
-                height: MediaQuery.of(context).size.height > 570 ? 16.0 : 4),
-            //if (widget.results.isNotEmpty) Report(widget.results: widget.results[0]),
-            if (widget.results.isNotEmpty)
-              SingleChildScrollView(
-                child: SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.49,
-                  child: ListView.builder(
-                    restorationId: 'missingPayments',
-                    shrinkWrap: true,
-                    itemCount: widget.results.length,
-                    itemBuilder: (context, index) {
-                      return Column(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Align(
-                              alignment: Alignment.centerLeft,
-                              child: Text(
-                                  dateTimeFormat
-                                      .format(widget.results[index].time),
-                                  style: const TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w400)),
-                            ),
-                          ),
-                          GestureDetector(
-                            onTap: () async {
-                              Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      Report(result: widget.results[index]),
-                                ),
-                              );
-                            },
-                            child: Container(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 8.0),
-                              decoration: BoxDecoration(
-                                border:
-                                    Border.all(color: Colors.blue, width: 1.5),
-                                borderRadius: BorderRadius.circular(8.0),
-                              ),
-                              child: SizedBox(
-                                //width: MediaQuery.of(context).size.width * 0.8,
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    SizedBox(
-                                      width: MediaQuery.of(context).size.width *
-                                          0.7,
-                                      child: Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.start,
-                                        children: [
-                                          const SizedBox(width: 4),
-                                          SizedBox(
-                                            width: MediaQuery.of(context)
-                                                    .size
-                                                    .width *
-                                                0.25,
-                                            child: Text(
-                                              widget.results[index].name,
-                                              style:
-                                                  const TextStyle(fontSize: 11),
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 2),
-                                          const Icon(
-                                            Icons.close,
-                                            size: 24,
-                                            color: Colors.blue,
-                                          ),
-                                          const SizedBox(width: 2),
-                                          SizedBox(
-                                            width: MediaQuery.of(context)
-                                                    .size
-                                                    .width *
-                                                0.36,
-                                            child: Text(
-                                              widget.results[index].name2,
-                                              style:
-                                                  const TextStyle(fontSize: 11),
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    IconButton(
-                                      alignment: Alignment.center,
-                                      padding: const EdgeInsets.all(0),
-                                      onPressed: () {
-                                        showDialog(
-                                          context: context,
-                                          builder: (context) => AlertDialog(
-                                            title: const Text(
-                                              'Deletar',
-                                              style:
-                                                  TextStyle(color: Colors.red),
-                                            ),
-                                            content: const Text(
-                                                'Deseja excluir este item?'),
-                                            actions: <Widget>[
-                                              TextButton(
-                                                onPressed: () {
-                                                  Navigator.of(context).pop();
-                                                },
-                                                child: const Text('Cancelar'),
-                                              ),
-                                              TextButton(
-                                                onPressed: () {
-                                                  setState(() => widget.results
-                                                      .removeAt(index));
-                                                  saveData(widget.results);
-                                                  Navigator.of(context).pop();
-                                                },
-                                                child: const Text(
-                                                  'OK',
-                                                  style: TextStyle(
-                                                      color: Colors.red),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        );
-                                      },
-                                      icon: const Icon(
-                                        Icons.delete_forever_sharp,
-                                        size: 28,
-                                        color: Colors.red,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      );
-                    },
-                  ),
+              Expanded(
+                child: HistoryList(
+                  results: widget.results,
                 ),
               ),
           ],

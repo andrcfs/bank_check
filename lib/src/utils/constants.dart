@@ -9,3 +9,10 @@ DateFormat dateTimeFormat = DateFormat('dd/MM/yy HH:mm');
 const primaryColor = Color(0xFF2697FF);
 const secondaryColor = Color(0xFF2A2D3E);
 const bgColor = Color(0xFF212332);
+const List<Color> pieColors = [
+  Colors.blueAccent,
+  Colors.tealAccent,
+  Colors.orange,
+  Colors.redAccent,
+  Colors.purpleAccent,
+];
