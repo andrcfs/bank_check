@@ -1,26 +1,35 @@
-import 'package:bank_check/src/utils/classes.dart';
 import 'package:bank_check/src/utils/constants.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
-class BankChart extends StatefulWidget {
-  final ResultCredit result;
-  const BankChart({super.key, required this.result});
+class CreditPieChart extends StatefulWidget {
+  final double total;
+  final List<MapEntry<String, double>> suppliers;
+  final List<String> others;
+  const CreditPieChart(
+      {super.key,
+      required this.total,
+      required this.suppliers,
+      required this.others});
 
   @override
-  State<BankChart> createState() => _BankChartState();
+  State<CreditPieChart> createState() => _CreditPieChartState();
 }
 
-class _BankChartState extends State<BankChart> {
-  late List<MapEntry<String, double>> suppliers;
-  double total = 0;
+class _CreditPieChartState extends State<CreditPieChart> {
   int? touchedIndex;
+  List<String> othersList = [];
+  String others = 'Outros';
 
   @override
   void initState() {
     super.initState();
-    suppliers = getSuppliers(widget.result.bankPriceSums);
-    total = suppliers.fold(0, (sum, amount) => sum + amount.value);
+    if (widget.others.isNotEmpty) {
+      othersList = widget.others.map((e) => e.trim()).toList();
+      others = othersList.join(', ');
+    } else {
+      others = widget.suppliers.last.key;
+    }
   }
 
   @override
@@ -36,6 +45,7 @@ class _BankChartState extends State<BankChart> {
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Row(
+                mainAxisSize: MainAxisSize.max,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text(
@@ -46,7 +56,7 @@ class _BankChartState extends State<BankChart> {
                     ),
                   ),
                   Text(
-                    'R\$ ${total.toStringAsFixed(2)}',
+                    'R\$ ${widget.total.toStringAsFixed(2)}',
                     style: const TextStyle(
                       fontWeight: FontWeight.w400,
                       fontSize: 18,
@@ -79,7 +89,7 @@ class _BankChartState extends State<BankChart> {
                   ),
                   sectionsSpace: 2,
                   centerSpaceRadius: 40,
-                  sections: createSections(suppliers, touchedIndex),
+                  sections: createSections(widget.suppliers, touchedIndex),
                 ),
               ),
             ),
@@ -88,10 +98,10 @@ class _BankChartState extends State<BankChart> {
               child: ListView.builder(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                itemCount: suppliers.length,
+                itemCount: widget.suppliers.length,
                 itemBuilder: (context, index) {
                   final isSelected = index == touchedIndex;
-                  final supplier = suppliers[index];
+                  final supplier = widget.suppliers[index];
                   return ListTile(
                     onTap: () {
                       setState(() {
@@ -124,7 +134,7 @@ class _BankChartState extends State<BankChart> {
                       ),
                     ),
                     subtitle: Text(
-                      supplier.key,
+                      touchedIndex == 4 && index == 4 ? others : supplier.key,
                       style: TextStyle(
                         color: touchedIndex == null
                             ? null
@@ -156,7 +166,6 @@ List<PieChartSectionData> createSections(
   // Iterate over the entries to display
   for (int i = 0; i < entriesToDisplay.length; i++) {
     final entry = entriesToDisplay[i];
-    final String supplier = entry.key;
     final double amount = entry.value;
     final isSelected = i == selectedIndex;
     final double radius = isSelected ? 60 : 50;
@@ -215,26 +224,4 @@ List<PieChartSectionData> createSections(
 
   // Return the list of sections
   return sections;
-}
-
-List<MapEntry<String, double>> getSuppliers(Map<String, double> bankPriceSums) {
-  List<MapEntry<String, double>> suppliers = [];
-  final entries = bankPriceSums.entries.toList()
-    ..sort((a, b) => b.value.compareTo(a.value)); // Sort from highest to lowest
-
-  // Prepare the entries to display
-
-  if (entries.length > 5) {
-    // Take the first 4 entries
-    suppliers = entries.sublist(0, 4);
-
-    // Sum up the rest of the entries into 'Others'
-    double othersAmount =
-        entries.sublist(4).fold(0, (sum, entry) => sum + entry.value);
-    suppliers.add(MapEntry('Outros', othersAmount));
-  } else {
-    // If 5 or fewer entries, use them all
-    suppliers = entries;
-  }
-  return suppliers;
 }

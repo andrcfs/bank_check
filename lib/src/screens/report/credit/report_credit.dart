@@ -1,17 +1,42 @@
-import 'package:bank_check/src/screens/report/credit/bank_chart.dart';
-import 'package:bank_check/src/screens/report/credit/system_chart.dart';
+import 'package:bank_check/src/screens/report/credit/comparison.dart';
+import 'package:bank_check/src/screens/report/credit/credit_piechart.dart';
+import 'package:bank_check/src/screens/report/credit/methods.dart';
+import 'package:bank_check/src/screens/report/credit/report_section.dart';
 import 'package:bank_check/src/utils/classes.dart';
-import 'package:bank_check/src/utils/constants.dart';
 import 'package:bank_check/src/widgets/pdf_view.dart';
 import 'package:flutter/material.dart';
 
-class ReportCredit extends StatelessWidget {
+class ReportCredit extends StatefulWidget {
   const ReportCredit({
     super.key,
     required this.result,
   });
-
   final ResultCredit result;
+
+  @override
+  State<ReportCredit> createState() => _ReportCreditState();
+}
+
+class _ReportCreditState extends State<ReportCredit> {
+  late List<MapEntry<String, double>> bankSuppliers;
+  late List<MapEntry<String, double>> systemSuppliers;
+  late Map<String, double> combinedEntries;
+  List<String> bankOthers = [];
+  List<String> systemOthers = [];
+  double bankTotal = 0;
+  double systemTotal = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    bankSuppliers = getSuppliers(widget.result.bankPriceSums, bankOthers);
+    combinedEntries = combineEntries(widget.result.systemPriceSums);
+    systemSuppliers = getSuppliers(combinedEntries, systemOthers);
+    bankTotal = bankSuppliers.fold(0, (sum, amount) => sum + amount.value);
+    systemTotal = systemSuppliers.fold(0, (sum, amount) => sum + amount.value);
+    print('dnv');
+    print(systemOthers);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +47,7 @@ class ReportCredit extends StatelessWidget {
           IconButton(
               icon: const Icon(Icons.share),
               onPressed: () async {
-                final String name = result.name
+                final String name = widget.result.name
                     .toString()
                     .replaceAll('.xlsx', '')
                     .replaceAll(' ', '');
@@ -33,7 +58,7 @@ class ReportCredit extends StatelessWidget {
                 Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (context) => PdfView(
-                      result: result,
+                      result: widget.result,
                     ),
                   ),
                 );
@@ -46,77 +71,30 @@ class ReportCredit extends StatelessWidget {
               MediaQuery.of(context).size.height > 570 ? 8.0 : 4),
           child: Column(
             children: [
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: Text(
-                    'Extrato Bancário',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w400,
-                      fontSize: 18,
-                    ),
-                  ),
+              ReportSection(
+                title: 'Extrato Bancário',
+                widget: CreditPieChart(
+                  total: bankTotal,
+                  suppliers: bankSuppliers,
+                  others: bankOthers,
                 ),
               ),
-              Container(
-                width: MediaQuery.of(context).size.width,
-                padding:
-                    const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
-                decoration: BoxDecoration(
-                  color: secondaryColor,
-                  borderRadius: BorderRadius.circular(10.0),
-                ),
-                child: BankChart(
-                  result: result,
+              ReportSection(
+                title: 'Sistema',
+                widget: CreditPieChart(
+                  total: systemTotal,
+                  suppliers: systemSuppliers,
+                  others: systemOthers,
                 ),
               ),
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: Text(
-                    'Sistema',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w400,
-                      fontSize: 18,
-                    ),
-                  ),
-                ),
-              ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
-                decoration: BoxDecoration(
-                  color: secondaryColor,
-                  borderRadius: BorderRadius.circular(10.0),
-                ),
-                child: SystemChart(
-                  result: result,
-                ),
-              ),
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: Text(
-                    'Comparativo',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w400,
-                      fontSize: 18,
-                    ),
-                  ),
-                ),
-              ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
-                decoration: BoxDecoration(
-                  color: secondaryColor,
-                  borderRadius: BorderRadius.circular(10.0),
-                ),
-                child: const SizedBox(),
-              ),
+              ReportSection(
+                title: 'Comparativo',
+                widget: ComparisonSection(
+                    bankTotal: bankTotal,
+                    bankSuppliers: bankSuppliers,
+                    systemTotal: systemTotal,
+                    systemSuppliers: systemSuppliers),
+              )
             ],
           ),
         ),
