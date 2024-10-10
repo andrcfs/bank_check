@@ -1,8 +1,8 @@
+import 'package:bank_check/src/pdf_view.dart';
 import 'package:bank_check/src/screens/report/debit/bankXsystem.dart';
 import 'package:bank_check/src/screens/report/debit/matching_payments.dart';
 import 'package:bank_check/src/screens/report/debit/systemXbank.dart';
 import 'package:bank_check/src/utils/classes.dart';
-import 'package:bank_check/src/widgets/pdf_view.dart';
 import 'package:flutter/material.dart';
 import 'package:printing/printing.dart';
 

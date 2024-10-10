@@ -3,16 +3,10 @@ import 'package:bank_check/src/utils/constants.dart';
 import 'package:flutter/material.dart';
 
 class ComparisonSection extends StatefulWidget {
-  final double bankTotal;
   final List<MapEntry<String, double>> bankSuppliers;
-  final double systemTotal;
   final List<MapEntry<String, double>> systemSuppliers;
   const ComparisonSection(
-      {super.key,
-      required this.bankTotal,
-      required this.bankSuppliers,
-      required this.systemTotal,
-      required this.systemSuppliers});
+      {super.key, required this.bankSuppliers, required this.systemSuppliers});
 
   @override
   State<ComparisonSection> createState() => _ComparisonSectionState();
@@ -20,10 +14,11 @@ class ComparisonSection extends StatefulWidget {
 
 class _ComparisonSectionState extends State<ComparisonSection> {
   List<MapEntry<Color, double>> bankList = [];
-  List<MapEntry<Color, double>> systemSupplier = [];
+  List<MapEntry<Color, double>> systemList = [];
   double bankTotal = 0;
   double systemTotal = 0;
-  int? touchedIndex;
+  List<int> touchedIndexes = [];
+  List<int> touchedIndexes2 = [];
   @override
   void initState() {
     super.initState();
@@ -31,13 +26,15 @@ class _ComparisonSectionState extends State<ComparisonSection> {
         .map((supplier) => MapEntry(
             pieColors[widget.bankSuppliers.indexOf(supplier)], supplier.value))
         .toList();
-    systemSupplier = widget.systemSuppliers
+    systemList = widget.systemSuppliers
         .map((supplier) => MapEntry(
             pieColors[widget.systemSuppliers.indexOf(supplier)],
             supplier.value))
         .toList();
-    bankTotal = widget.bankTotal;
-    systemTotal = widget.systemTotal;
+    bankTotal =
+        widget.bankSuppliers.fold(0, (sum, amount) => sum + amount.value);
+    systemTotal =
+        widget.systemSuppliers.fold(0, (sum, amount) => sum + amount.value);
   }
 
   @override
@@ -46,64 +43,124 @@ class _ComparisonSectionState extends State<ComparisonSection> {
       children: [
         ComparisonChart(
           bankTotal: bankTotal,
-          bankSuppliers: bankList,
           systemTotal: systemTotal,
-          systemSuppliers: systemSupplier,
+          bankSuppliers: bankList,
+          systemSuppliers: systemList,
         ),
-        SizedBox(
-          width: 280,
-          child: ListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: widget.bankSuppliers.length,
-            itemBuilder: (context, index) {
-              final isSelected = index == touchedIndex;
-              final supplier = widget.bankSuppliers[index];
-              return ListTile(
-                onTap: () {
-                  setState(() {
-                    touchedIndex = touchedIndex == index ? null : index;
-                    bankList.removeAt(index);
-                  });
+        Row(
+          children: [
+            SizedBox(
+              width: 160,
+              child: ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: widget.bankSuppliers.length,
+                itemBuilder: (context, index) {
+                  final isSelected = touchedIndexes.contains(index);
+                  final supplier = widget.bankSuppliers[index];
+                  return ListTile(
+                    onTap: () {
+                      setState(() {
+                        if (touchedIndexes.contains(index)) {
+                          touchedIndexes.remove(index);
+                          bankList.add(MapEntry(
+                              pieColors[widget.bankSuppliers.indexOf(supplier)],
+                              supplier.value));
+                          bankTotal += supplier.value;
+                        } else {
+                          touchedIndexes.add(index);
+                          bankList.removeWhere(
+                              (item) => item.value == supplier.value);
+                          bankTotal -= supplier.value;
+                        }
+                      });
+                    },
+                    horizontalTitleGap: 12.0,
+                    selectedColor: Colors.grey[200],
+                    dense: true,
+                    leading: Container(
+                      height: 20,
+                      width: 20,
+                      decoration: BoxDecoration(
+                          color:
+                              isSelected ? Colors.grey[500] : pieColors[index],
+                          borderRadius: BorderRadius.circular(8)),
+                    ),
+                    title: Text(
+                      'R\$ ${supplier.value.toStringAsFixed(2)}',
+                      style: TextStyle(
+                        color: isSelected ? Colors.grey[500] : null,
+                      ),
+                    ),
+                    subtitle: Text(
+                      supplier.key,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: isSelected ? Colors.grey[500] : null,
+                      ),
+                    ),
+                  );
                 },
-                horizontalTitleGap: 12.0,
-                selected: isSelected,
-                selectedColor: Colors.grey[200],
-                dense: true,
-                leading: Container(
-                  height: 20,
-                  width: 20,
-                  decoration: BoxDecoration(
-                      color: touchedIndex == null
-                          ? pieColors[index]
-                          : index == touchedIndex
-                              ? pieColors[index]
-                              : Colors.grey[500],
-                      borderRadius: BorderRadius.circular(8)),
-                ),
-                title: Text(
-                  'R\$ ${supplier.value.toStringAsFixed(2)}',
-                  style: TextStyle(
-                    color: touchedIndex == null
-                        ? null
-                        : index == touchedIndex
-                            ? Colors.yellowAccent
-                            : Colors.grey[500],
-                  ),
-                ),
-                subtitle: Text(
-                  supplier.key,
-                  style: TextStyle(
-                    color: touchedIndex == null
-                        ? null
-                        : index == touchedIndex
-                            ? null
-                            : Colors.grey[500],
-                  ),
-                ),
-              );
-            },
-          ),
+              ),
+            ),
+            SizedBox(
+              width: 160,
+              child: ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: widget.systemSuppliers.length,
+                itemBuilder: (context, index) {
+                  final isSelected = touchedIndexes2.contains(index);
+                  final supplier = widget.systemSuppliers[index];
+                  return ListTile(
+                    onTap: () {
+                      setState(() {
+                        if (touchedIndexes2.contains(index)) {
+                          touchedIndexes2.remove(index);
+                          systemList.add(MapEntry(
+                              pieColors[
+                                  widget.systemSuppliers.indexOf(supplier)],
+                              supplier.value));
+                          systemTotal += supplier.value;
+                        } else {
+                          touchedIndexes2.add(index);
+                          systemList.removeWhere(
+                              (item) => item.value == supplier.value);
+                          systemTotal -= supplier.value;
+                        }
+                      });
+                    },
+                    horizontalTitleGap: 12.0,
+                    selectedColor: Colors.grey[200],
+                    dense: true,
+                    leading: Container(
+                      height: 20,
+                      width: 20,
+                      decoration: BoxDecoration(
+                          color:
+                              isSelected ? Colors.grey[500] : pieColors[index],
+                          borderRadius: BorderRadius.circular(8)),
+                    ),
+                    title: Text(
+                      'R\$ ${supplier.value.toStringAsFixed(2)}',
+                      style: TextStyle(
+                        color: isSelected ? Colors.grey[500] : null,
+                      ),
+                    ),
+                    subtitle: Text(
+                      supplier.key,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: isSelected ? Colors.grey[500] : null,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
         )
       ],
     );

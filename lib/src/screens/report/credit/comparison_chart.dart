@@ -25,28 +25,30 @@ class ComparisonChartState extends State<ComparisonChart> {
 
   Map<int, List<MapEntry<Color, double>>> mainItems = {};
   int touchedIndex = -1;
-  double highestTotal = 0;
+  double yMaxValue = 0;
   double difference = 0;
   Color diffColor = Colors.red;
 
   @override
   void initState() {
     super.initState();
+
+    yMaxValue = max(widget.bankTotal, widget.systemTotal);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     difference = widget.bankTotal - widget.systemTotal;
     if (difference > 0) {
       diffColor = const Color.fromARGB(255, 73, 209, 78);
+    } else {
+      diffColor = Colors.red;
     }
-
     mainItems.addAll({
       0: widget.bankSuppliers,
       1: [MapEntry(diffColor, difference)],
       2: widget.systemSuppliers,
     });
-    highestTotal = max(widget.bankTotal, widget.systemTotal);
-  }
-
-  @override
-  Widget build(BuildContext context) {
     return SizedBox(
       height: MediaQuery.of(context).size.height * 0.5,
       width: MediaQuery.of(context).size.width,
@@ -55,7 +57,7 @@ class ComparisonChartState extends State<ComparisonChart> {
         child: BarChart(
           BarChartData(
             alignment: BarChartAlignment.center,
-            maxY: highestTotal + 5000,
+            maxY: yMaxValue + 5000,
             groupsSpace: 40,
             barTouchData: BarTouchData(
               handleBuiltInTouches: false,
@@ -82,11 +84,17 @@ class ComparisonChartState extends State<ComparisonChart> {
             ),
             titlesData: FlTitlesData(
               show: true,
-              topTitles: const AxisTitles(),
-              bottomTitles: AxisTitles(
+              topTitles: AxisTitles(
                 sideTitles: SideTitles(
                   showTitles: true,
                   reservedSize: 32,
+                  getTitlesWidget: topTitles,
+                ),
+              ),
+              bottomTitles: AxisTitles(
+                sideTitles: SideTitles(
+                  showTitles: true,
+                  reservedSize: 44,
                   getTitlesWidget: bottomTitles,
                 ),
               ),
@@ -141,6 +149,53 @@ class ComparisonChartState extends State<ComparisonChart> {
   }
 
   Widget bottomTitles(double value, TitleMeta meta) {
+    const style = TextStyle(color: Colors.white, fontSize: 12);
+    String text;
+    String text2;
+    switch (value.toInt()) {
+      case 0:
+        text = '';
+        text2 = 'Extrato';
+        break;
+      case 1:
+        if (difference >= 0) {
+          text = 'Diferença: R\$ ${difference.toStringAsFixed(2)}';
+          text2 = '>';
+        } else {
+          text = 'Diferença: R\$ -${difference.abs().toStringAsFixed(2)}';
+          text2 = '<';
+        }
+        break;
+      case 2:
+        text = '';
+        text2 = 'Sistema';
+        break;
+      default:
+        text = '';
+        text2 = '';
+        break;
+    }
+    return SideTitleWidget(
+      axisSide: meta.axisSide,
+      child: Column(
+        children: [
+          Text(
+            text2,
+            style: style,
+          ),
+          const SizedBox(
+            height: 2,
+          ),
+          Text(
+            text,
+            style: style,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget topTitles(double value, TitleMeta meta) {
     const style = TextStyle(color: Colors.white, fontSize: 12);
     String text;
     switch (value.toInt()) {
@@ -209,13 +264,16 @@ class ComparisonChartState extends State<ComparisonChart> {
     final colors = suppliers.map((e) => e.key).toList();
     final sum = values.fold(0.0, (a, b) => a + b);
     final isTouched = touchedIndex == xPosition;
+    double yMax = sum.abs();
+    final yMaxString = yMax.toStringAsFixed(2);
+    yMax = double.parse(yMaxString);
     return BarChartGroupData(
       x: xPosition,
       groupVertically: true,
       showingTooltipIndicators: isTouched ? [0] : [],
       barRods: [
         BarChartRodData(
-          toY: sum.abs(),
+          toY: yMax,
           width: barWidth,
           borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(6),
@@ -229,7 +287,7 @@ class ComparisonChartState extends State<ComparisonChart> {
                   : values.sublist(0, index).fold(0.0, (a, b) => a + b),
               //toY
               index == 0
-                  ? values[0]
+                  ? values[0].abs()
                   : values.sublist(0, index + 1).fold(0.0, (a, b) => a + b),
               //color
               colors[index],

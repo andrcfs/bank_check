@@ -3,7 +3,6 @@ import 'package:bank_check/src/screens/report/credit/credit_piechart.dart';
 import 'package:bank_check/src/screens/report/credit/methods.dart';
 import 'package:bank_check/src/screens/report/credit/report_section.dart';
 import 'package:bank_check/src/utils/classes.dart';
-import 'package:bank_check/src/widgets/pdf_view.dart';
 import 'package:flutter/material.dart';
 
 class ReportCredit extends StatefulWidget {
@@ -43,7 +42,7 @@ class _ReportCreditState extends State<ReportCredit> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Relatório'),
-        actions: [
+        /* actions: [
           IconButton(
               icon: const Icon(Icons.share),
               onPressed: () async {
@@ -52,9 +51,9 @@ class _ReportCreditState extends State<ReportCredit> {
                     .replaceAll('.xlsx', '')
                     .replaceAll(' ', '');
 
-                /* await Printing.sharePdf(
+                await Printing.sharePdf(
                     bytes: await generatePdf('Relatório', result),
-                    filename: 'relatorio-$name.pdf'); */
+                    filename: 'relatorio-$name.pdf');
                 Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (context) => PdfView(
@@ -63,7 +62,7 @@ class _ReportCreditState extends State<ReportCredit> {
                   ),
                 );
               }),
-        ],
+        ], */
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -90,9 +89,7 @@ class _ReportCreditState extends State<ReportCredit> {
               ReportSection(
                 title: 'Comparativo',
                 widget: ComparisonSection(
-                    bankTotal: bankTotal,
                     bankSuppliers: bankSuppliers,
-                    systemTotal: systemTotal,
                     systemSuppliers: systemSuppliers),
               )
             ],

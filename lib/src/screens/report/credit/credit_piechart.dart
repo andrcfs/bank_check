@@ -19,11 +19,17 @@ class CreditPieChart extends StatefulWidget {
 class _CreditPieChartState extends State<CreditPieChart> {
   int? touchedIndex;
   List<String> othersList = [];
+  Set<int> selectedList = {};
   String others = 'Outros';
+  List<MapEntry<Color, double>> selectedSupplier = [];
 
   @override
   void initState() {
     super.initState();
+    selectedSupplier = widget.suppliers
+        .map((supplier) => MapEntry(
+            pieColors[widget.suppliers.indexOf(supplier)], supplier.value))
+        .toList();
     if (widget.others.isNotEmpty) {
       othersList = widget.others.map((e) => e.trim()).toList();
       others = othersList.join(', ');
@@ -89,7 +95,8 @@ class _CreditPieChartState extends State<CreditPieChart> {
                   ),
                   sectionsSpace: 2,
                   centerSpaceRadius: 40,
-                  sections: createSections(widget.suppliers, touchedIndex),
+                  sections: createSections(widget.suppliers, selectedSupplier,
+                      selectedList, touchedIndex),
                 ),
               ),
             ),
@@ -100,29 +107,51 @@ class _CreditPieChartState extends State<CreditPieChart> {
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: widget.suppliers.length,
                 itemBuilder: (context, index) {
-                  final isSelected = index == touchedIndex;
+                  final isSelected = selectedList.contains(index);
                   final supplier = widget.suppliers[index];
                   return ListTile(
-                    onTap: () {
+                    onLongPress: () {
                       setState(() {
+                        if (isSelected) return;
                         touchedIndex = touchedIndex == index ? null : index;
                       });
                     },
+                    onTap: () {
+                      setState(() {
+                        touchedIndex = null;
+                        if (selectedList.contains(index)) {
+                          selectedSupplier.add(MapEntry(
+                              pieColors[widget.suppliers.indexOf(supplier)],
+                              supplier.value));
+                          selectedList.remove(index);
+                        } else {
+                          if (selectedSupplier.length == 1) return;
+                          selectedSupplier.removeWhere(
+                              (item) => item.value == supplier.value);
+                          selectedList.add(index);
+                        }
+                      });
+                    },
                     horizontalTitleGap: 12.0,
-                    selected: isSelected,
+                    selected: touchedIndex == index,
                     selectedColor: Colors.grey[200],
                     dense: true,
                     leading: Container(
                       height: 20,
                       width: 20,
                       decoration: BoxDecoration(
-                          color: touchedIndex == null
-                              ? pieColors[index]
-                              : index == touchedIndex
-                                  ? pieColors[index]
-                                  : Colors.grey[500],
+                          color:
+                              !isSelected ? pieColors[index] : Colors.grey[500],
                           borderRadius: BorderRadius.circular(8)),
                     ),
+                    /* trailing: IconButton(
+                        onPressed: () {
+                          setState(() {
+                           
+                        },
+                        icon: Icon(isChecked
+                            ? Icons.indeterminate_check_box_rounded
+                            : Icons.check_box_outline_blank)), */
                     title: Text(
                       'R\$ ${supplier.value.toStringAsFixed(2)}',
                       style: TextStyle(
@@ -130,7 +159,7 @@ class _CreditPieChartState extends State<CreditPieChart> {
                             ? null
                             : index == touchedIndex
                                 ? Colors.yellowAccent
-                                : Colors.grey[500],
+                                : null,
                       ),
                     ),
                     subtitle: Text(
@@ -155,8 +184,10 @@ class _CreditPieChartState extends State<CreditPieChart> {
 }
 
 List<PieChartSectionData> createSections(
-  List<MapEntry<String, double>> entriesToDisplay,
-  int? selectedIndex,
+  List<MapEntry<String, double>> entries,
+  List<MapEntry<Color, double>> entriesToDisplay,
+  Set<int> selectedList,
+  int? focusedIndex,
 ) {
   List<PieChartSectionData> sections = [];
 
@@ -167,19 +198,20 @@ List<PieChartSectionData> createSections(
   for (int i = 0; i < entriesToDisplay.length; i++) {
     final entry = entriesToDisplay[i];
     final double amount = entry.value;
-    final isSelected = i == selectedIndex;
-    final double radius = isSelected ? 60 : 50;
-    final fontSize = selectedIndex == null
-        ? 16.0
-        : isSelected
-            ? 25.0
-            : 12.0;
+
+    bool isFocused = false;
+    double fontSize = 16.0;
+    if (focusedIndex != null) {
+      isFocused = entries[focusedIndex].value == entry.value;
+      fontSize = isFocused ? 25.0 : 12.0;
+    }
+    final double radius = isFocused ? 60 : 50;
 
     // Calculate the percentage contribution of each supplier
     double percentage = (amount / total) * 100;
 
     // Assign color from the predefined list
-    Color color = pieColors[i];
+    Color color = entry.key;
 
     // Create the PieChartSectionData
     PieChartSectionData section = PieChartSectionData(
