@@ -21,6 +21,7 @@ class _CreditPieChartState extends State<CreditPieChart> {
   List<String> othersList = [];
   Set<int> selectedList = {};
   String others = 'Outros';
+  double total = 0.0;
   List<MapEntry<Color, double>> selectedSupplier = [];
 
   @override
@@ -36,6 +37,7 @@ class _CreditPieChartState extends State<CreditPieChart> {
     } else {
       others = widget.suppliers.last.key;
     }
+    total = widget.total;
   }
 
   @override
@@ -62,7 +64,7 @@ class _CreditPieChartState extends State<CreditPieChart> {
                     ),
                   ),
                   Text(
-                    'R\$ ${widget.total.toStringAsFixed(2)}',
+                    'R\$ ${total.toStringAsFixed(2)}',
                     style: const TextStyle(
                       fontWeight: FontWeight.w400,
                       fontSize: 18,
@@ -124,11 +126,13 @@ class _CreditPieChartState extends State<CreditPieChart> {
                               pieColors[widget.suppliers.indexOf(supplier)],
                               supplier.value));
                           selectedList.remove(index);
+                          total += supplier.value;
                         } else {
                           if (selectedSupplier.length == 1) return;
                           selectedSupplier.removeWhere(
                               (item) => item.value == supplier.value);
                           selectedList.add(index);
+                          total -= supplier.value;
                         }
                       });
                     },
@@ -201,7 +205,7 @@ List<PieChartSectionData> createSections(
 
     bool isFocused = false;
     double fontSize = 16.0;
-    if (focusedIndex != null) {
+    if (focusedIndex != null && focusedIndex > 0) {
       isFocused = entries[focusedIndex].value == entry.value;
       fontSize = isFocused ? 25.0 : 12.0;
     }
