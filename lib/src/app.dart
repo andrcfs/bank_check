@@ -1,7 +1,7 @@
 import 'package:bank_check/src/screens/home.dart';
-import 'package:bank_check/src/utils/backup.dart';
 import 'package:bank_check/src/utils/classes.dart';
 import 'package:bank_check/src/utils/constants.dart';
+import 'package:bank_check/src/utils/methods.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -24,12 +24,14 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  var _dataFuture;
+  Future<List<Result>>? savedData;
+  Future<List<SavedFile>>? savedFiles;
 
   @override
   void initState() {
     super.initState();
-    _dataFuture = loadData();
+    savedData = loadData();
+    savedFiles = loadFilesList();
   }
 
   @override
@@ -51,8 +53,8 @@ class _MyAppState extends State<MyApp> {
               appBar: AppBar(
                 title: const Text('Conciliação Bancária'),
               ),
-              body: FutureBuilder<List<Result>>(
-                future: _dataFuture,
+              body: FutureBuilder<List<dynamic>>(
+                future: Future.wait([savedData!, savedFiles!]),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());
@@ -62,12 +64,18 @@ class _MyAppState extends State<MyApp> {
                         content: Text('Error: ${snapshot.error}'),
                       ),
                     );
-                    return const MyHome(results: []);
+                    return const MyHome(
+                      results: [],
+                      savedFiles: [],
+                    );
                   } else if (snapshot.hasData) {
                     final data = snapshot.data!;
-                    return MyHome(results: data);
+                    return MyHome(results: data[0], savedFiles: data[1]);
                   } else {
-                    return const MyHome(results: []);
+                    return const MyHome(
+                      results: [],
+                      savedFiles: [],
+                    );
                   }
                 },
               ),

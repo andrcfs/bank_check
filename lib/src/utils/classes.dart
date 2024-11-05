@@ -134,3 +134,22 @@ class ResultCredit extends Result {
             .toList(),
       );
 }
+
+class SavedFile {
+  final String name;
+  final String path;
+
+  SavedFile({required this.name, required this.path});
+
+  Map<String, dynamic> toJson() => {
+        'name': name,
+        'path': path,
+      };
+
+  factory SavedFile.fromJson(Map<String, dynamic> json) {
+    return SavedFile(
+      name: json['name'],
+      path: json['path'],
+    );
+  }
+}

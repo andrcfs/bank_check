@@ -1,8 +1,8 @@
 import 'package:bank_check/src/screens/report/credit/comparison.dart';
 import 'package:bank_check/src/screens/report/credit/credit_piechart.dart';
-import 'package:bank_check/src/screens/report/credit/methods.dart';
 import 'package:bank_check/src/screens/report/credit/report_section.dart';
 import 'package:bank_check/src/utils/classes.dart';
+import 'package:bank_check/src/utils/methods.dart';
 import 'package:flutter/material.dart';
 
 class ReportCredit extends StatefulWidget {
