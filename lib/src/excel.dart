@@ -1,12 +1,34 @@
 import 'dart:io';
 
+import 'package:bank_check/src/methods.dart';
 import 'package:bank_check/src/utils/classes.dart';
 import 'package:bank_check/src/utils/constants.dart';
 import 'package:excel/excel.dart';
-import 'package:flutter/material.dart';
 import 'package:path/path.dart';
 
 // Define the data types to search for
+DebitColumns debitColumns = DebitColumns(
+  dateNames: [
+    'DataPagamento',
+    'Data Pagamento',
+    'DataVencimento',
+    'Data Vencimento'
+  ],
+  priceNames: [
+    'ValorPago',
+    'Valor Pago',
+    'ValorPagamento',
+    'Valor p/ Pagamento',
+    'Valor',
+  ],
+  supplierNames: [
+    'FornecedorRazaoSocial',
+    'Fornecedor Razão Social',
+    'FornecedorNomeFantasia',
+    'Fornecedor Nome Fantasia',
+  ],
+);
+
 List<String> columnNamesDebit = [
   'Data Vencimento',
   'Valor p/ Pagamento',
@@ -21,10 +43,11 @@ List<String> columnNamesCredit = [
 ];
 
 List<int> indices = [];
-bool isError = false;
 
 Result compareDebit(context, File file, File file2) {
-  isError = false;
+  debitColumns.dateIndexes = [];
+  debitColumns.priceIndexes = [];
+  debitColumns.supplierIndexes = [];
   List<MyData> bankDataList = [];
   List<MyData> systemDataList = [];
   List<MyData> priceDiff = [];
@@ -35,6 +58,7 @@ Result compareDebit(context, File file, File file2) {
   Sheet table = readSheet(file);
   Sheet table2 = readSheet(file2);
   readDebit(table, bankDataList);
+  print('entrou');
   readSystemDebit(context, table2, systemDataList);
   print(bankDataList.length);
   print(systemDataList.length);
@@ -83,7 +107,6 @@ Result compareDebit(context, File file, File file2) {
 }
 
 Result compareCredit(context, File file, File file2) {
-  isError = false;
   List<MyData> bankDataList = [];
   List<MyData> systemDataList = [];
   int lastCreditDay = 1;
@@ -174,43 +197,78 @@ int readCredit(Sheet table, List<MyData> bankDataList) {
   return lastCreditDay;
 }
 
+// Read the data from the user's system table file
 void readSystemDebit(context, Sheet table, List<MyData> systemDataList) {
-  Map<String, int> columnIndices = {};
+  //Map<String, int> columnIndices = {};
   // Identify the columns that match the specified data types
-  for (var cell in table.rows[0]) {
+  /* for (var cell in table.rows[0]) {
     if (cell != null && columnNamesDebit.contains(cell.value.toString())) {
       columnIndices[cell.value.toString()] = cell.columnIndex;
     }
+  } */
+  for (String name in debitColumns.dateNames) {
+    for (var cell in table.rows[0]) {
+      if (cell != null && name == cell.value.toString()) {
+        debitColumns.dateIndexes.add(cell.columnIndex);
+      }
+    }
   }
-  if (columnIndices.isEmpty || columnIndices.length < 3) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          'ERRO: Não foi possível encontrar as colunas necessárias no arquivo 2.',
-          style: TextStyle(color: Colors.white),
-        ),
-        backgroundColor: Colors.red,
-        elevation: 1,
-        duration: Duration(seconds: 5),
-      ),
-    );
-    isError = true;
+  for (String name in debitColumns.priceNames) {
+    for (var cell in table.rows[0]) {
+      if (cell != null && name == cell.value.toString()) {
+        debitColumns.priceIndexes.add(cell.columnIndex);
+      }
+    }
+  }
+  for (String name in debitColumns.supplierNames) {
+    for (var cell in table.rows[0]) {
+      if (cell != null && name == cell.value.toString()) {
+        debitColumns.supplierIndexes.add(cell.columnIndex);
+      }
+    }
+  }
+  //List<int> valuesList = columnIndices.values.toList();
+  print(debitColumns.columnIndexes);
+  print(debitColumns.indexesFound);
+  if (debitColumns.indexesFound == false) {
+    showErrorSnackBar(context,
+        'ERRO: Não foi possível encontrar as colunas necessárias no arquivo 2.');
+
     return;
   }
-  List<int> valuesList = columnIndices.values.toList();
   for (int row = 1; row < table.maxRows; row++) {
-    String dateString = table.rows[row][valuesList[0]]!.value.toString();
-    if (dateString == '') {
+    DateTime date = DateTime.now();
+    double price = 0.0;
+    String supplier = '';
+    if (table.rows[row][0] == null) {
       continue;
     }
-    final date = DateTime.parse(dateString);
-    final price =
-        double.parse(table.rows[row][valuesList[1]]!.value.toString());
-
-    var supplier =
-        table.rows[row][valuesList[3]]!.value.toString().replaceAll(' ', '');
-    if (supplier == '' && valuesList.length > 3) {
-      supplier = table.rows[row][valuesList[2]]!.value.toString();
+    for (int i = 0; i < debitColumns.dateIndexes.length; i++) {
+      if (table.rows[row][debitColumns.dateIndexes[i]] == null) {
+        break;
+      }
+      String dateString =
+          table.rows[row][debitColumns.dateIndexes[i]]!.value.toString();
+      if (dateString == '') {
+        continue;
+      }
+      date = DateTime.parse(dateString);
+    }
+    for (int i = 0; i < debitColumns.priceIndexes.length; i++) {
+      final test =
+          table.rows[row][debitColumns.priceIndexes[i]]!.value.toString();
+      if (test == '') {
+        continue;
+      }
+      price = double.parse(test);
+    }
+    for (int i = 0; i < debitColumns.supplierIndexes.length; i++) {
+      final test =
+          table.rows[row][debitColumns.supplierIndexes[i]]!.value.toString();
+      if (test == '') {
+        continue;
+      }
+      supplier = test;
     }
     final data = MyData(date, price, supplier);
     systemDataList.add(data);
@@ -228,18 +286,9 @@ void readSystemCredit(
     }
   }
   if (columnIndices.isEmpty || columnIndices.length < 3) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          'ERRO: Não foi possível encontrar as colunas necessárias no arquivo 2.',
-          style: TextStyle(color: Colors.white),
-        ),
-        backgroundColor: Colors.red,
-        elevation: 1,
-        duration: Duration(seconds: 5),
-      ),
-    );
-    isError = true;
+    showErrorSnackBar(context,
+        'ERRO: Não foi possível encontrar as colunas necessárias no arquivo 2.');
+
     return;
   }
   List<int> valuesList = columnIndices.values.toList();

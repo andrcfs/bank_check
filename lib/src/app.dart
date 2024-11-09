@@ -47,6 +47,7 @@ class _MyAppState extends State<MyApp> {
           data: MediaQueryData.fromView(View.of(context))
               .copyWith(textScaler: appTextScaler),
           child: MaterialApp(
+            debugShowCheckedModeBanner: false,
             home: Scaffold(
               appBar: AppBar(
                 title: const Text('Conciliação Bancária'),

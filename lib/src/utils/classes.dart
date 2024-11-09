@@ -24,6 +24,35 @@ class MyData {
   }
 }
 
+class DebitColumns {
+  final List<String> dateNames;
+  final List<String> priceNames;
+  final List<String> supplierNames;
+
+  DebitColumns({
+    required this.dateNames,
+    required this.priceNames,
+    required this.supplierNames,
+  });
+  List<int> dateIndexes = [];
+  List<int> priceIndexes = [];
+  List<int> supplierIndexes = [];
+
+  bool get indexesFound {
+    return dateIndexes.isEmpty
+        ? false
+        : priceIndexes.isEmpty
+            ? false
+            : supplierIndexes.isEmpty
+                ? false
+                : true;
+  }
+
+  String get columnIndexes {
+    return 'dateIndexes: $dateIndexes\npriceIndexes: $priceIndexes\nsupplierIndexes: $supplierIndexes';
+  }
+}
+
 abstract class Result {
   final String name;
   final String name2;
