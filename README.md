@@ -6,6 +6,6 @@ DRE (Demonstração do Resultado do Exercício) e/ou um pdf para exportação.
 
 ## Screenshots
 
-![Dashboard](screenshots/bank1.png)
-![Conciliação Bancária](screenshots/bank2.png)
-![Relatório de Receitas](screenshots/bank3.png)
+<img src="screenshots/bank1.png" alt="Dashboard" width="300">
+<img src="screenshots/bank2.png" alt="Conciliação Bancária" width="300">
+<img src="screenshots/bank3.png" alt="Relatório de Receitas" width="300">

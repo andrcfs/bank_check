@@ -3,6 +3,7 @@ import 'package:bank_check/src/screens/report/debit/bankXsystem.dart';
 import 'package:bank_check/src/screens/report/debit/matching_payments.dart';
 import 'package:bank_check/src/screens/report/debit/systemXbank.dart';
 import 'package:bank_check/src/utils/classes.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:printing/printing.dart';
 
@@ -44,7 +45,12 @@ class ReportDebit extends StatelessWidget {
       body: SingleChildScrollView(
         child: Padding(
           padding: EdgeInsets.all(
-              MediaQuery.of(context).size.height > 570 ? 8.0 : 4),
+              (defaultTargetPlatform == TargetPlatform.iOS ||
+                      defaultTargetPlatform == TargetPlatform.android)
+                  ? MediaQuery.of(context).size.height > 570
+                      ? 8.0
+                      : 4
+                  : 32.0),
           child: Column(
             children: [
               const Align(

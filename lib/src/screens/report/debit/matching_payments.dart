@@ -12,6 +12,14 @@ class MatchingPaymentsReport extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final double porcentagem = result.paymentsFound.length *
+        100 /
+        (result.paymentsFound.length +
+            result.missingPayments.length +
+            result.priceDiff.length +
+            result.dateDiff.length +
+            result.duplicates.length +
+            result.supplierDiff.length);
     return Container(
       height: MediaQuery.of(context).size.height * 0.6,
       width: MediaQuery.of(context).size.width - 16,
@@ -29,17 +37,23 @@ class MatchingPaymentsReport extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                result.paymentsFound.isNotEmpty
-                    ? result.paymentsFound.length > 1
-                        ? 'Os seguintes ${result.paymentsFound.length} pagamentos estão conciliados:'
-                        : 'Apenas um pagamento está conciliado:'
-                    : 'Nenhum pagamento encontrado.',
-                style: const TextStyle(
-                  fontWeight: FontWeight.w500,
-                  fontSize: 16,
-                ),
-                textAlign: TextAlign.start,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    result.paymentsFound.isNotEmpty
+                        ? result.paymentsFound.length > 1
+                            ? 'Os seguintes ${result.paymentsFound.length} pagamentos estão conciliados:'
+                            : 'Apenas um pagamento está conciliado:'
+                        : 'Nenhum pagamento encontrado.',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w500,
+                      fontSize: 16,
+                    ),
+                    textAlign: TextAlign.start,
+                  ),
+                  Text('Porcentagem: ${porcentagem.toStringAsFixed(1)}%'),
+                ],
               ),
               SizedBox(
                 height: MediaQuery.of(context).size.height > 570 ? 8.0 : 4,

@@ -35,6 +35,14 @@ class PdfView extends StatelessWidget {
 }
 
 Future<Uint8List> generateDebitPdf(String title, ResultDebit result) async {
+  final double porcentagem = result.paymentsFound.length *
+      100 /
+      (result.paymentsFound.length +
+          result.missingPayments.length +
+          result.priceDiff.length +
+          result.dateDiff.length +
+          result.duplicates.length +
+          result.supplierDiff.length);
   final pdf = pw.Document(version: PdfVersion.pdf_1_5, compress: true);
   List<pw.Widget> content = [
     pw.Header(level: 0, text: 'Relatório de Conciliação Bancária'),
@@ -136,11 +144,14 @@ Future<Uint8List> generateDebitPdf(String title, ResultDebit result) async {
   content.add(pw.Header(level: 2, text: 'Pagamentos encontrados no sistema'));
   if (result.paymentsFound.isNotEmpty) {
     content.add(
-      pw.Paragraph(
-        text: result.paymentsFound.length > 1
-            ? 'Os seguintes ${result.paymentsFound.length} pagamentos estão conciliados:'
-            : 'Apenas um pagamento está conciliado:',
-      ),
+      pw.Row(mainAxisAlignment: pw.MainAxisAlignment.spaceBetween, children: [
+        pw.Paragraph(
+          text: result.paymentsFound.length > 1
+              ? 'Os seguintes ${result.paymentsFound.length} pagamentos estão conciliados:'
+              : 'Apenas um pagamento está conciliado:',
+        ),
+        pw.Paragraph(text: 'Porcentagem: ${porcentagem.toStringAsFixed(1)}%'),
+      ]),
     );
     content.add(contentTable('paymentsFound', result.paymentsFound));
     content.add(pw.SizedBox(height: 4.0));

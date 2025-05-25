@@ -22,6 +22,10 @@ class MyData {
       json['supplierType'] as String?,
     );
   }
+  @override
+  String toString() {
+    return 'date: $date, price: $price, supplier: $supplier, supplierType: $supplierType';
+  }
 }
 
 class DebitColumns {
@@ -74,6 +78,8 @@ class ResultDebit extends Result {
   final List<MyData> priceDiff;
   final List<MyData> dateDiff;
   final List<MyData> paymentsFound;
+  final List<MyData> duplicates;
+  final List<MyData> supplierDiff;
 
   ResultDebit({
     required super.name,
@@ -84,6 +90,8 @@ class ResultDebit extends Result {
     required this.priceDiff,
     required this.dateDiff,
     required this.paymentsFound,
+    required this.duplicates,
+    required this.supplierDiff,
   });
 
   @override
@@ -96,6 +104,8 @@ class ResultDebit extends Result {
         'priceDiff': priceDiff.map((d) => d.toJson()).toList(),
         'dateDiff': dateDiff.map((d) => d.toJson()).toList(),
         'paymentsFound': paymentsFound.map((d) => d.toJson()).toList(),
+        'duplicates': duplicates.map((d) => d.toJson()).toList(),
+        'supplierDiff': supplierDiff.map((d) => d.toJson()).toList(),
       };
 
   factory ResultDebit.fromJson(Map<String, dynamic> json) => ResultDebit(
@@ -115,6 +125,16 @@ class ResultDebit extends Result {
         paymentsFound: (json['paymentsFound'] as List<dynamic>)
             .map((e) => MyData.fromJson(e as Map<String, dynamic>))
             .toList(),
+        duplicates: json['duplicates'] != null
+            ? (json['duplicates'] as List<dynamic>)
+                .map((e) => MyData.fromJson(e as Map<String, dynamic>))
+                .toList()
+            : <MyData>[],
+        supplierDiff: json['supplierDiff'] != null
+            ? (json['supplierDiff'] as List<dynamic>)
+                .map((e) => MyData.fromJson(e as Map<String, dynamic>))
+                .toList()
+            : <MyData>[],
       );
 }
 

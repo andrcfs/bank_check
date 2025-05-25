@@ -11,15 +11,15 @@ DebitColumns debitColumns = DebitColumns(
   dateNames: [
     'DataPagamento',
     'Data Pagamento',
-    'DataVencimento',
-    'Data Vencimento'
+    /* 'DataVencimento',
+    'Data Vencimento' */
   ],
   priceNames: [
     'ValorPago',
     'Valor Pago',
-    'ValorPagamento',
+    /* 'ValorPagamento',
     'Valor p/ Pagamento',
-    'Valor',
+    'Valor', */
   ],
   supplierNames: [
     'FornecedorRazaoSocial',
@@ -42,8 +42,6 @@ List<String> columnNamesCredit = [
   'Vendedor',
 ];
 
-List<int> indices = [];
-
 Result compareDebit(context, File file, File file2) {
   debitColumns.dateIndexes = [];
   debitColumns.priceIndexes = [];
@@ -54,37 +52,62 @@ Result compareDebit(context, File file, File file2) {
   List<MyData> dateDiff = [];
   List<MyData> missingPayments = [];
   List<MyData> paymentsFound = [];
-  indices = [];
+  List<MyData> duplicates = [];
+  List<MyData> supplierDiff = [];
+  List<int> valuesUsed = [];
+  List<int> systemIndicesUsed = [];
   Sheet table = readSheet(file);
   Sheet table2 = readSheet(file2);
   readDebit(table, bankDataList);
-  print('entrou');
   readSystemDebit(context, table2, systemDataList);
   print(bankDataList.length);
   print(systemDataList.length);
+  systemDataList.sort((a, b) => a.date.compareTo(b.date));
+
+  // Create a Map to index bankDataList by price
+  // coloca em uma lista todos as contas de preços iguais
+  Map<double, List<MyData>> bankDataMap = {};
+  for (var data in bankDataList) {
+    bankDataMap.putIfAbsent(data.price, () => []).add(data);
+  }
 
   for (int i = 0; i < systemDataList.length; i++) {
-    final List<MyData> indexes =
-        bankDataList.where((e) => e.price == systemDataList[i].price).toList();
-    final int index =
-        bankDataList.indexWhere((e) => e.price == systemDataList[i].price);
-    final DateTime date;
-    if (index < 0) {
-      priceDiff.add(systemDataList[i]);
+    final systemData = systemDataList[i];
+    final matchingBankData = bankDataMap[systemData.price];
+
+    if (matchingBankData == null || matchingBankData.isEmpty) {
+      priceDiff.add(systemData);
+      systemIndicesUsed.add(i);
       continue;
-    } else {
-      date = bankDataList[index].date;
     }
 
-    final int days = date.difference(systemDataList[i].date).inDays;
+    bool found = false;
+    for (var bankData in matchingBankData) {
+      if (valuesUsed.contains(bankDataList.indexOf(bankData))) continue;
+      int days = bankData.date.difference(systemData.date).inDays.abs();
+      if (days <= 2) {
+        paymentsFound.add(systemData);
+        valuesUsed.add(bankDataList.indexOf(bankData));
+        systemIndicesUsed.add(i);
+        found = true;
+        break;
+      }
+    }
 
-    if (days.abs() <= 2) {
-      paymentsFound.add(systemDataList[i]);
-      continue;
-    } else if (indexes.length < 2 && days.abs() % 7 != 0) {
-      dateDiff.add(systemDataList[i]);
+    if (!found) {
+      dateDiff.add(systemData);
+      systemIndicesUsed.add(i);
     }
   }
+
+  // Update duplicates list
+  duplicates = systemDataList
+      .where((element) =>
+          !systemIndicesUsed.contains(systemDataList.indexOf(element)))
+      .toList();
+
+  //Análise Extrato X Despesas do Sistema
+
   for (int i = 0; i < bankDataList.length; i++) {
     if (!systemDataList.any((e) => e.price == bankDataList[i].price)) {
       missingPayments.add(bankDataList[i]);
@@ -94,15 +117,22 @@ Result compareDebit(context, File file, File file2) {
   //print(dateDiff);
   //print(indices);
   //print(count);
+  missingPayments.sort((a, b) => a.date.compareTo(b.date));
+  priceDiff.sort((a, b) => a.date.compareTo(b.date));
+  dateDiff.sort((a, b) => a.date.compareTo(b.date));
+  paymentsFound.sort((a, b) => a.date.compareTo(b.date));
   final result = ResultDebit(
-      name: basename(file.path),
-      name2: basename(file2.path),
-      type: 'despesas',
-      time: DateTime.now(),
-      missingPayments: missingPayments,
-      priceDiff: priceDiff,
-      dateDiff: dateDiff,
-      paymentsFound: paymentsFound);
+    name: basename(file.path),
+    name2: basename(file2.path),
+    type: 'despesas',
+    time: DateTime.now(),
+    missingPayments: missingPayments,
+    priceDiff: priceDiff,
+    dateDiff: dateDiff,
+    paymentsFound: paymentsFound,
+    duplicates: duplicates,
+    supplierDiff: supplierDiff,
+  );
   return result;
 }
 
@@ -111,7 +141,6 @@ Result compareCredit(context, File file, File file2) {
   List<MyData> systemDataList = [];
   int lastCreditDay = 1;
 
-  indices = [];
   Sheet table = readSheet(file);
   Sheet table2 = readSheet(file2);
   lastCreditDay = readCredit(table, bankDataList);
@@ -152,7 +181,8 @@ Result compareCredit(context, File file, File file2) {
 
 void readDebit(Sheet table, List<MyData> bankDataList) {
   for (int row = 4; row < table.maxRows - 3; row++) {
-    if (table.rows[row][9]!.value.toString() != 'D') {
+    if (table.rows[row][9] == null ||
+        table.rows[row][9]!.value.toString() != 'D') {
       continue;
     }
 
@@ -168,6 +198,7 @@ void readDebit(Sheet table, List<MyData> bankDataList) {
     }
 
     final data = MyData(date, price, supplier);
+
     bankDataList.add(data);
   }
 }
@@ -199,13 +230,6 @@ int readCredit(Sheet table, List<MyData> bankDataList) {
 
 // Read the data from the user's system table file
 void readSystemDebit(context, Sheet table, List<MyData> systemDataList) {
-  //Map<String, int> columnIndices = {};
-  // Identify the columns that match the specified data types
-  /* for (var cell in table.rows[0]) {
-    if (cell != null && columnNamesDebit.contains(cell.value.toString())) {
-      columnIndices[cell.value.toString()] = cell.columnIndex;
-    }
-  } */
   for (String name in debitColumns.dateNames) {
     for (var cell in table.rows[0]) {
       if (cell != null && name == cell.value.toString()) {
@@ -236,11 +260,13 @@ void readSystemDebit(context, Sheet table, List<MyData> systemDataList) {
 
     return;
   }
+  print("table.maxRows ${table.maxRows}");
   for (int row = 1; row < table.maxRows; row++) {
     DateTime date = DateTime.now();
     double price = 0.0;
     String supplier = '';
-    if (table.rows[row][0] == null) {
+    if (table.rows[row][debitColumns.priceIndexes[0]] == null) {
+      //##!!PODE CAUSAR ERRO??!!
       continue;
     }
     for (int i = 0; i < debitColumns.dateIndexes.length; i++) {
@@ -271,6 +297,7 @@ void readSystemDebit(context, Sheet table, List<MyData> systemDataList) {
       supplier = test;
     }
     final data = MyData(date, price, supplier);
+    print(data);
     systemDataList.add(data);
   }
 }

@@ -3,10 +3,11 @@ import 'dart:io';
 import 'package:bank_check/src/excel.dart';
 import 'package:bank_check/src/utils/backup.dart';
 import 'package:bank_check/src/utils/classes.dart';
+import 'package:bank_check/src/utils/constants.dart'; // Added import for secondaryColor
 import 'package:bank_check/src/widgets/history_list.dart';
+import 'package:bank_check/src/widgets/home_buttons.dart'; // Import the new widgets
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:path/path.dart';
 
 class MyHome extends StatefulWidget {
   const MyHome({super.key, required this.results});
@@ -22,295 +23,167 @@ class _MyHomeState extends State<MyHome> {
 
   @override
   Widget build(BuildContext context) {
-    print("rabanada:");
-    print(MediaQuery.of(context).size.height);
+    final bool isSmallScreenHeight = MediaQuery.of(context).size.height <= 570;
+    final double verticalPadding = isSmallScreenHeight ? 8.0 : 16.0;
+    final double generalSpacing = isSmallScreenHeight ? 8.0 : 16.0;
+
     return Center(
       child: Padding(
-        padding:
-            EdgeInsets.all(MediaQuery.of(context).size.height > 570 ? 16.0 : 8),
+        padding: EdgeInsets.all(verticalPadding),
         child: Column(
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    //backgroundColor: secondaryColor,
-                    iconColor: Colors.white,
-                    maximumSize: Size(
-                        MediaQuery.of(context).size.width / 2 - 20,
-                        double.infinity),
-                    minimumSize: Size(
-                        MediaQuery.of(context).size.width / 2 - 20,
-                        MediaQuery.of(context).size.height * 0.128),
-                    foregroundColor: Colors.white,
-                    side: const BorderSide(width: 1.5, color: Colors.blue),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10.0),
-                    ),
-                  ),
-                  onPressed: () async {
-                    FilePickerResult? results =
-                        await FilePicker.platform.pickFiles();
-
-                    if (results != null) {
-                      setState(() {
-                        file = File(results.files.single.path!);
-                        print(file.path);
-                      });
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Nenhum arquivo selecionado'),
-                        ),
-                      );
-                    }
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Center(
-                        child: Column(
-                      children: [
-                        const Icon(
-                          Icons.monetization_on_outlined,
-                          size: 50,
-                        ),
-                        const SizedBox(
-                          height: 4.0,
-                        ),
-                        Text(
-                          MediaQuery.of(context).size.width > 360
-                              ? 'Inserir Extrato'
-                              : 'Extrato',
-                        ),
-                        const SizedBox(
-                          height: 4.0,
-                        ),
-                        if (file.path != '')
-                          SizedBox(
-                            width: MediaQuery.of(context).size.width / 3.4,
-                            child: Text(
-                              basename(file.path).replaceAll('.xlsx', ''),
-                              overflow: TextOverflow.ellipsis,
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                  fontSize: 12, fontWeight: FontWeight.w400),
-                            ),
-                          ),
-                      ],
-                    )),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    iconColor: Colors.white,
-                    maximumSize: Size(
-                        MediaQuery.of(context).size.width / 2 - 20,
-                        double.infinity),
-                    minimumSize: Size(
-                        MediaQuery.of(context).size.width / 2 - 20,
-                        MediaQuery.of(context).size.height * 0.075),
-                    foregroundColor: Colors.white,
-                    side: const BorderSide(width: 1.5, color: Colors.blue),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10.0),
-                    ),
-                  ),
-                  onPressed: () async {
-                    FilePickerResult? results =
-                        await FilePicker.platform.pickFiles();
-
-                    if (results != null) {
-                      setState(() {
-                        file2 = File(results.files.single.path!);
-                        print(file2.path);
-                      });
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'Nenhum arquivo selecionado',
-                            style: TextStyle(color: Colors.white),
-                          ),
-                          backgroundColor: Colors.red,
-                          elevation: 1,
-                        ),
-                      );
-                    }
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Center(
-                        child: Column(
-                      children: [
-                        const Icon(
-                          Icons.list_alt,
-                          size: 50,
-                        ),
-                        const SizedBox(
-                          height: 4.0,
-                        ),
-                        Text(
-                          MediaQuery.of(context).size.width > 360
-                              ? 'Inserir Despesas ou Faturas'
-                              : 'Despesas ou Faturas',
-                          //style: TextStyle(fontSize: 14),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(
-                          height: 4.0,
-                        ),
-                        if (file2.path != '')
-                          SizedBox(
-                            width: MediaQuery.of(context).size.width / 3.4,
-                            child: Text(
-                              basename(file2.path).replaceAll('.xlsx', ''),
-                              overflow: TextOverflow.ellipsis,
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                  fontSize: 12, fontWeight: FontWeight.w400),
-                            ),
-                          ),
-                      ],
-                    )),
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(
-                height: MediaQuery.of(context).size.height > 570 ? 16.0 : 8),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                fixedSize: Size(MediaQuery.of(context).size.width * 0.7,
-                    MediaQuery.of(context).size.height * 0.07),
-                foregroundColor: Colors.white,
-                side: const BorderSide(width: 1.5, color: Colors.blue),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30.0),
-                ),
+            Container(
+              padding: EdgeInsets.symmetric(
+                  vertical: generalSpacing, horizontal: generalSpacing),
+              decoration: const BoxDecoration(
+                color: secondaryColor,
+                borderRadius: BorderRadius.all(Radius.circular(10)),
               ),
-              onPressed: () async {
-                if (file.path == '' || file2.path == '') {
-                  showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text(
-                        'Erro',
-                        style: TextStyle(color: Colors.red),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Gerar Relatório",
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  SizedBox(height: generalSpacing),
+                  Row(
+                    children: [
+                      FilePickerButton(
+                        icon: Icons.monetization_on_outlined,
+                        label: MediaQuery.of(context).size.width > 360
+                            ? 'Inserir Extrato'
+                            : 'Extrato',
+                        filePath: file.path,
+                        onPressed: () async {
+                          FilePickerResult? results =
+                              await FilePicker.platform.pickFiles(
+                            type: FileType.custom,
+                            allowedExtensions: ['xlsx'],
+                          );
+                          if (results != null) {
+                            setState(() {
+                              file = File(results.files.single.path!);
+                            });
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Nenhum arquivo selecionado'),
+                              ),
+                            );
+                          }
+                        },
                       ),
-                      content: const Text('Selecione os arquivos necessários'),
-                      actions: <Widget>[
-                        TextButton(
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
-                          child: const Text('OK'),
-                        ),
-                      ],
-                    ),
-                  );
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'Gerando relatório...',
-                        style: TextStyle(color: Colors.white),
+                      const SizedBox(width: 8),
+                      FilePickerButton(
+                        icon: Icons.list_alt,
+                        label: MediaQuery.of(context).size.width > 360
+                            ? 'Despesas ou Faturas'
+                            : 'Balanço',
+                        filePath: file2.path,
+                        onPressed: () async {
+                          FilePickerResult? results =
+                              await FilePicker.platform.pickFiles(
+                            type: FileType.custom,
+                            allowedExtensions: ['xlsx'],
+                          );
+                          if (results != null) {
+                            setState(() {
+                              file2 = File(results.files.single.path!);
+                            });
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Nenhum arquivo selecionado'),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        },
                       ),
-                      backgroundColor: Colors.green,
-                      elevation: 1,
-                    ),
-                  );
-                  await Future.delayed(const Duration(milliseconds: 500));
-                  setState(() {
-                    widget.results.add(compareDebit(context, file, file2));
-                    saveData(widget.results);
-                  });
-                }
-              },
-              child: const Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text('Gerar relatório de Despesas'),
-                    SizedBox(width: 4),
-                    Icon(
-                      Icons.edit,
-                      size: 18,
-                      color: Colors.white,
-                    )
-                  ],
-                ),
+                    ],
+                  ),
+                  SizedBox(height: generalSpacing),
+                  GenerateReportButton(
+                    label: 'Gerar relatório de Despesas',
+                    iconData: Icons.arrow_downward,
+                    onPressed: () async {
+                      if (file.path == '' || file2.path == '') {
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Erro',
+                                style: TextStyle(color: Colors.red)),
+                            content: const Text(
+                                'Selecione os arquivos necessários.'),
+                            actions: <Widget>[
+                              TextButton(
+                                onPressed: () => Navigator.of(context).pop(),
+                                child: const Text('OK'),
+                              ),
+                            ],
+                          ),
+                        );
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Gerando relatório...',
+                                style: TextStyle(color: Colors.white)),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                        await Future.delayed(const Duration(milliseconds: 500));
+                        setState(() {
+                          widget.results
+                              .add(compareDebit(context, file, file2));
+                          saveData(widget.results);
+                        });
+                      }
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  GenerateReportButton(
+                    label: 'Gerar relatório de Receitas',
+                    iconData: Icons.arrow_upward,
+                    onPressed: () async {
+                      if (file.path == '' || file2.path == '') {
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Erro',
+                                style: TextStyle(color: Colors.red)),
+                            content: const Text(
+                                'Selecione os arquivos necessários.'),
+                            actions: <Widget>[
+                              TextButton(
+                                onPressed: () => Navigator.of(context).pop(),
+                                child: const Text('OK'),
+                              ),
+                            ],
+                          ),
+                        );
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Gerando relatório...',
+                                style: TextStyle(color: Colors.white)),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                        await Future.delayed(const Duration(milliseconds: 500));
+                        setState(() {
+                          widget.results
+                              .add(compareCredit(context, file, file2));
+                          saveData(widget.results);
+                        });
+                      }
+                    },
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 8),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                fixedSize: Size(MediaQuery.of(context).size.width * 0.7,
-                    MediaQuery.of(context).size.height * 0.07),
-                foregroundColor: Colors.white,
-                side: const BorderSide(width: 1.5, color: Colors.blue),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30.0),
-                ),
-              ),
-              onPressed: () async {
-                if (file.path == '' || file2.path == '') {
-                  showDialog(
-                    context: context,
-                    builder: (context) => AlertDialog(
-                      title: const Text(
-                        'Erro',
-                        style: TextStyle(color: Colors.red),
-                      ),
-                      content: const Text('Selecione os arquivos necessários'),
-                      actions: <Widget>[
-                        TextButton(
-                          onPressed: () {
-                            Navigator.of(context).pop();
-                          },
-                          child: const Text('OK'),
-                        ),
-                      ],
-                    ),
-                  );
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'Gerando relatório...',
-                        style: TextStyle(color: Colors.white),
-                      ),
-                      backgroundColor: Colors.green,
-                      elevation: 1,
-                    ),
-                  );
-                  await Future.delayed(const Duration(milliseconds: 500));
-                  setState(() {
-                    widget.results.add(compareCredit(context, file, file2));
-                    saveData(widget.results);
-                  });
-                }
-              },
-              child: const Padding(
-                padding: EdgeInsets.all(8.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text('Gerar relatório de Receitas'),
-                    SizedBox(width: 4),
-                    Icon(
-                      Icons.edit,
-                      size: 18,
-                      color: Colors.white,
-                    )
-                  ],
-                ),
-              ),
-            ),
-            SizedBox(
-                height: MediaQuery.of(context).size.height > 570 ? 24.0 : 8),
+            SizedBox(height: isSmallScreenHeight ? 8.0 : 24.0),
             if (widget.results.isNotEmpty)
               Expanded(
                 child: HistoryList(
